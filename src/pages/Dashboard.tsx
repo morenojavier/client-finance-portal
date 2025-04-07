@@ -8,22 +8,12 @@ import {
   CheckCircle, 
   AlertCircle 
 } from "lucide-react";
-import { ResponsiveContainer, PieChart, Pie, Cell, Legend } from "recharts";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 const Dashboard = () => {
   const [totalBalance] = useState(21000);
   const [totalServices] = useState(5);
   const [completedServices] = useState(3);
   const [pendingPayments] = useState(2);
-
-  // Mock data for the chart
-  const data = [
-    { name: "Pagadas", value: 60 },
-    { name: "Pendientes", value: 40 },
-  ];
-
-  const COLORS = ["#0891b2", "#e11d48"];
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -66,42 +56,8 @@ const Dashboard = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in">
-        <div className="lg:col-span-2">
-          <ServiceTable />
-        </div>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Estado de Pagos</CardTitle>
-          </CardHeader>
-          <CardContent className="flex justify-center">
-            <div className="w-full h-[250px]">
-              <ResponsiveContainer width="100%" height="100%">
-                <PieChart>
-                  <Pie
-                    data={data}
-                    cx="50%"
-                    cy="50%"
-                    innerRadius={60}
-                    outerRadius={80}
-                    paddingAngle={5}
-                    dataKey="value"
-                    labelLine={false}
-                  >
-                    {data.map((entry, index) => (
-                      <Cell
-                        key={`cell-${index}`}
-                        fill={COLORS[index % COLORS.length]}
-                      />
-                    ))}
-                  </Pie>
-                  <Legend verticalAlign="bottom" height={36} />
-                </PieChart>
-              </ResponsiveContainer>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="animate-in">
+        <ServiceTable />
       </div>
     </div>
   );
