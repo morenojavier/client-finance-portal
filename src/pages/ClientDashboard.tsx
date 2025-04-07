@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useParams, Link } from "react-router-dom";
 import { 
@@ -7,14 +6,26 @@ import {
   DollarSign,
   AlertCircle,
   CheckCircle,
-  CircleDollarSign
+  CircleDollarSign,
+  Share2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import CustomServiceTable from "@/components/CustomServiceTable";
 import DashboardCard from "@/components/DashboardCard";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
-// Mock client data - in a real app this would come from an API
 const mockClients = [
   {
     id: "1",
@@ -56,9 +67,9 @@ const ClientDashboard = () => {
   const [client, setClient] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [isPublicView, setIsPublicView] = useState(false);
+  const [showAllServices, setShowAllServices] = useState(false);
 
   useEffect(() => {
-    // Simulate API call to get client data
     const fetchClient = () => {
       setTimeout(() => {
         const foundClient = mockClients.find(c => c.id === clientId);
@@ -67,12 +78,19 @@ const ClientDashboard = () => {
       }, 300);
     };
 
-    // Check if this is a public or authenticated view
     const currentPath = window.location.pathname;
     setIsPublicView(!currentPath.includes('/dashboard') && !currentPath.includes('/clientes'));
 
     fetchClient();
   }, [clientId]);
+
+  const handleShareLink = () => {
+    const shareLink = `${window.location.origin}/cliente/${clientId}`;
+    navigator.clipboard.writeText(shareLink);
+    toast.success("Enlace copiado al portapapeles", {
+      description: "Ya puedes compartirlo con tu cliente"
+    });
+  };
 
   if (loading) {
     return (
@@ -124,13 +142,57 @@ const ClientDashboard = () => {
             {client.company} - {client.email}
           </p>
         </div>
-        <Button 
-          className="mt-4 md:mt-0 bg-emerald-600 hover:bg-emerald-700"
-          onClick={() => console.log("Liquidar adeudo")}
-        >
-          <CircleDollarSign className="mr-2 h-4 w-4" />
-          Liquidar adeudo
-        </Button>
+        <div className="mt-4 md:mt-0 flex gap-2 flex-wrap">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button variant="outline">
+                      <Share2 className="mr-2 h-4 w-4" />
+                      Compartir
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Compartir estado de cuenta</DialogTitle>
+                      <DialogDescription>
+                        Comparte este enlace con tu cliente para que pueda ver su estado de cuenta
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-4">
+                      <div className="p-3 bg-gray-50 rounded border text-sm">
+                        <span className="font-mono break-all">
+                          {`${window.location.origin}/cliente/${clientId}`}
+                        </span>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <DialogClose asChild>
+                        <Button variant="outline">Cancelar</Button>
+                      </DialogClose>
+                      <Button onClick={handleShareLink}>
+                        <Share2 className="mr-2 h-4 w-4" />
+                        Copiar enlace
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>Compartir estado de cuenta con el cliente</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          
+          <Button 
+            className="bg-emerald-600 hover:bg-emerald-700"
+            onClick={() => console.log("Liquidar adeudo")}
+          >
+            <CircleDollarSign className="mr-2 h-4 w-4" />
+            Liquidar adeudo
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
@@ -165,35 +227,22 @@ const ClientDashboard = () => {
       </div>
 
       <div className="animate-in">
-        <CustomServiceTable clientId={clientId} />
-      </div>
-
-      {!isPublicView && (
-        <div className="animate-in bg-white p-4 rounded-lg shadow">
-          <h2 className="text-lg font-medium mb-4">Compartir estado de cuenta</h2>
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="flex-1">
-              <div className="p-3 bg-gray-50 rounded border text-sm">
-                <span className="font-mono break-all">
-                  {`${window.location.origin}/cliente/${clientId}`}
-                </span>
-              </div>
-              <p className="text-sm text-muted-foreground mt-2">
-                Comparte este enlace con tu cliente para que pueda ver su estado de cuenta
-              </p>
-            </div>
-            <Button 
-              className="md:self-start"
-              onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/cliente/${clientId}`);
-                alert("¡Enlace copiado!");
-              }}
-            >
-              Copiar enlace
-            </Button>
-          </div>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">
+            {!showAllServices ? "Pagos pendientes" : "Todos los servicios"}
+          </h2>
+          <Button 
+            variant="outline" 
+            onClick={() => setShowAllServices(!showAllServices)}
+          >
+            {showAllServices ? "Ver solo pendientes" : "Ver todos los servicios"}
+          </Button>
         </div>
-      )}
+        <CustomServiceTable 
+          clientId={clientId} 
+          filterStatus={!showAllServices ? ["pending", "overdue"] : undefined}
+        />
+      </div>
     </div>
   );
 };

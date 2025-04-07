@@ -79,14 +79,20 @@ const mockServices = [
 interface ServiceTableProps {
   limit?: number;
   clientId?: string;
+  filterStatus?: string[];
 }
 
-const CustomServiceTable = ({ limit, clientId }: ServiceTableProps) => {
+const CustomServiceTable = ({ limit, clientId, filterStatus }: ServiceTableProps) => {
   // Filter services by clientId if provided
   let services = [...mockServices];
   
   if (clientId) {
     services = services.filter(service => service.clientId === clientId);
+  }
+  
+  // Filter services by status if provided
+  if (filterStatus && filterStatus.length > 0) {
+    services = services.filter(service => filterStatus.includes(service.status));
   }
   
   // Limit the number of services if limit is provided
@@ -173,7 +179,9 @@ const CustomServiceTable = ({ limit, clientId }: ServiceTableProps) => {
           ) : (
             <TableRow>
               <TableCell colSpan={clientId ? 4 : 5} className="h-24 text-center">
-                No hay servicios registrados.
+                {filterStatus && filterStatus.length > 0 
+                  ? "No hay servicios con pagos pendientes."
+                  : "No hay servicios registrados."}
               </TableCell>
             </TableRow>
           )}
