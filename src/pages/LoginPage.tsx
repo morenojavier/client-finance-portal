@@ -46,15 +46,6 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-finance-light to-white p-4">
       <div className="max-w-md w-full animate-in">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-finance-dark mb-2">
-            Portal Financiero
-          </h1>
-          <p className="text-muted-foreground">
-            Accede a tu información financiera
-          </p>
-        </div>
-
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Iniciar Sesión</CardTitle>

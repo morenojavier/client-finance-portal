@@ -8,6 +8,8 @@ import { useIsMobile } from "@/hooks/use-mobile";
 const AppLayout = () => {
   const isMobile = useIsMobile();
   const [showSidebar, setShowSidebar] = useState(!isMobile);
+  // Aquí se establecería el nombre de la empresa que podría venir de un API o contexto
+  const companyName = "Empresa Demo"; // Este valor sería dinámico en producción
 
   const toggleSidebar = () => {
     setShowSidebar(!showSidebar);
@@ -33,7 +35,7 @@ const AppLayout = () => {
 
       {/* Main content area */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Navbar toggleSidebar={toggleSidebar} />
+        <Navbar toggleSidebar={toggleSidebar} companyName={companyName} />
         <main className="flex-1 overflow-auto pl-0 md:pl-16">
           <div className="container mx-auto max-w-7xl">
             <Outlet />
