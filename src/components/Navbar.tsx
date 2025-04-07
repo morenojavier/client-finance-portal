@@ -13,7 +13,7 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
 
   return (
     <header className="bg-white border-b border-gray-200 h-16 flex items-center justify-between px-4 md:px-6">
-      <div className="flex items-center">
+      <div className="md:w-1/3 flex items-center">
         <Button
           variant="ghost"
           size="icon"
@@ -22,12 +22,15 @@ const Navbar = ({ toggleSidebar }: NavbarProps) => {
         >
           <Menu className="h-5 w-5" />
         </Button>
-        <h1 className="text-xl font-semibold text-finance-dark hidden md:block">
-          Portal Financiero
+      </div>
+      
+      <div className="flex-1 flex justify-center">
+        <h1 className="text-xl font-semibold text-finance-dark">
+          Xulabia
         </h1>
       </div>
 
-      <div className="flex items-center space-x-4">
+      <div className="md:w-1/3 flex items-center justify-end space-x-4">
         <div className="relative">
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />

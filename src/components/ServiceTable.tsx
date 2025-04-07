@@ -39,10 +39,16 @@ import {
   Filter, 
   Search,
   FileImage,
-  PaperclipIcon
+  PaperclipIcon,
+  Info
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 interface Service {
   id: string;
@@ -108,6 +114,7 @@ const ServiceTable = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
+  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
 
   const filteredServices = services.filter(
     (service) =>
@@ -170,6 +177,13 @@ const ServiceTable = () => {
     }
   };
 
+  const toggleDescription = (serviceId: string) => {
+    setExpandedDescriptions(prev => ({
+      ...prev,
+      [serviceId]: !prev[serviceId]
+    }));
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
@@ -207,82 +221,120 @@ const ServiceTable = () => {
             <TableBody>
               {filteredServices.length > 0 ? (
                 filteredServices.map((service) => (
-                  <TableRow key={service.id}>
-                    <TableCell>{formatDate(service.fecha)}</TableCell>
-                    <TableCell>{service.concepto}</TableCell>
-                    <TableCell className="hidden md:table-cell max-w-[200px] truncate">
-                      {service.descripcion}
-                    </TableCell>
-                    <TableCell>{formatCurrency(service.total)}</TableCell>
-                    <TableCell className="hidden md:table-cell">
-                      <Badge
-                        variant={service.estatus_factura === "generada" ? "default" : "outline"}
-                        className={cn(
-                          service.estatus_factura === "generada" 
-                            ? "bg-green-100 text-green-800 hover:bg-green-100" 
-                            : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                        )}
-                      >
-                        {service.estatus_factura === "generada" ? "Generada" : "Pendiente"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={service.pago_cliente === "pagada" ? "default" : "outline"}
-                        className={cn(
-                          service.pago_cliente === "pagada" 
-                            ? "bg-blue-100 text-blue-800 hover:bg-blue-100" 
-                            : "bg-orange-100 text-orange-800 hover:bg-orange-100"
-                        )}
-                      >
-                        {service.pago_cliente === "pagada" ? "Pagada" : "Pendiente"}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Button 
-                        variant="outline" 
-                        size="sm" 
-                        onClick={() => handleUploadClick(service.id)}
-                        className="flex items-center gap-1"
-                      >
-                        <PaperclipIcon className="h-3 w-3" />
-                        <span className="hidden sm:inline">Adjuntar</span>
-                      </Button>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {service.estatus_factura === "generada" && (
-                            <>
-                              <DropdownMenuItem className="flex items-center">
-                                <Download className="mr-2 h-4 w-4" />
-                                <span>Descargar PDF</span>
-                              </DropdownMenuItem>
-                              <DropdownMenuItem className="flex items-center">
-                                <FileText className="mr-2 h-4 w-4" />
-                                <span>Descargar XML</span>
-                              </DropdownMenuItem>
-                            </>
+                  <React.Fragment key={service.id}>
+                    <TableRow>
+                      <TableCell>{formatDate(service.fecha)}</TableCell>
+                      <TableCell>{service.concepto}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => toggleDescription(service.id)}
+                              className="flex items-center gap-1 p-0 h-auto"
+                            >
+                              <Info className="h-3 w-3" />
+                              <span>Más información</span>
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="mt-2 text-sm">
+                            {service.descripcion}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </TableCell>
+                      <TableCell>{formatCurrency(service.total)}</TableCell>
+                      <TableCell className="hidden md:table-cell">
+                        <Badge
+                          variant={service.estatus_factura === "generada" ? "default" : "outline"}
+                          className={cn(
+                            service.estatus_factura === "generada" 
+                              ? "bg-green-100 text-green-800 hover:bg-green-100" 
+                              : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
                           )}
-                          {service.pago_cliente === "pendiente" && (
-                            <DropdownMenuItem className="flex items-center">
-                              <Upload className="mr-2 h-4 w-4" />
-                              <span>Subir Comprobante</span>
-                            </DropdownMenuItem>
+                        >
+                          {service.estatus_factura === "generada" ? "Generada" : "Pendiente"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Badge
+                          variant={service.pago_cliente === "pagada" ? "default" : "outline"}
+                          className={cn(
+                            service.pago_cliente === "pagada" 
+                              ? "bg-blue-100 text-blue-800 hover:bg-blue-100" 
+                              : "bg-orange-100 text-orange-800 hover:bg-orange-100"
                           )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </TableCell>
-                  </TableRow>
+                        >
+                          {service.pago_cliente === "pagada" ? "Pagada" : "Pendiente"}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          onClick={() => handleUploadClick(service.id)}
+                          className="flex items-center gap-1"
+                        >
+                          <PaperclipIcon className="h-3 w-3" />
+                          <span className="hidden sm:inline">Adjuntar</span>
+                        </Button>
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {service.estatus_factura === "generada" && (
+                              <>
+                                <DropdownMenuItem className="flex items-center">
+                                  <Download className="mr-2 h-4 w-4" />
+                                  <span>Descargar PDF</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center">
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  <span>Descargar XML</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {service.pago_cliente === "pendiente" && (
+                              <DropdownMenuItem className="flex items-center">
+                                <Upload className="mr-2 h-4 w-4" />
+                                <span>Subir Comprobante</span>
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                    {/* Mostrar descripción completa en móvil */}
+                    <TableRow className="md:hidden">
+                      <TableCell colSpan={8} className="py-0 px-4">
+                        <Collapsible>
+                          <CollapsibleTrigger asChild>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => toggleDescription(service.id)}
+                              className="flex items-center gap-1 p-0 h-auto my-2"
+                            >
+                              <Info className="h-3 w-3" />
+                              <span>Más información</span>
+                            </Button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent className="py-2 text-sm">
+                            {service.descripcion}
+                          </CollapsibleContent>
+                        </Collapsible>
+                      </TableCell>
+                    </TableRow>
+                  </React.Fragment>
                 ))
               ) : (
                 <TableRow>
