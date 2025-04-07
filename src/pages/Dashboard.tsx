@@ -1,5 +1,6 @@
 
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import DashboardCard from "@/components/DashboardCard";
 import ServiceTable from "@/components/ServiceTable";
 import { 
@@ -7,15 +8,49 @@ import {
   Receipt, 
   CheckCircle, 
   AlertCircle,
-  CircleDollarSign
+  CircleDollarSign,
+  Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+
+// Mock clients data
+const topClients = [
+  {
+    id: "1",
+    name: "Carlos Rodríguez",
+    company: "Empresa A",
+    pendingBalance: 5000,
+  },
+  {
+    id: "2",
+    name: "María González",
+    company: "Negocio B",
+    pendingBalance: 7500,
+  },
+  {
+    id: "3",
+    name: "Juan López",
+    company: "Startup C",
+    pendingBalance: 3000,
+  },
+];
 
 const Dashboard = () => {
   const [totalBalance] = useState(21000);
   const [totalServices] = useState(5);
   const [completedServices] = useState(3);
   const [pendingPayments] = useState(2);
+  const [totalClients] = useState(3);
+  const [activeClients] = useState(3);
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -35,39 +70,98 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 animate-in">
         <DashboardCard
           title="Adeudo Total"
           value={`$${totalBalance.toLocaleString('es-MX')}`}
-          description="Valor actual de tus servicios"
+          description="Valor total de servicios"
           icon={DollarSign}
-          className="border-l-4 border-finance-primary"
+          className="border-l-4 border-finance-primary lg:col-span-1 xl:col-span-2"
+        />
+        <DashboardCard
+          title="Total Clientes"
+          value={totalClients}
+          description="Clientes registrados"
+          icon={Users}
+          className="border-l-4 border-blue-500 lg:col-span-1 xl:col-span-1"
+        />
+        <DashboardCard
+          title="Clientes Activos"
+          value={activeClients}
+          description="Con pagos pendientes"
+          icon={Users}
+          className="border-l-4 border-green-600 lg:col-span-1 xl:col-span-1"
         />
         <DashboardCard
           title="Pagos Pendientes"
           value={pendingPayments}
-          description="Servicios con pago pendiente"
+          description="Servicios por cobrar"
           icon={AlertCircle}
-          className="border-l-4 border-orange-500"
+          className="border-l-4 border-orange-500 lg:col-span-1 xl:col-span-1"
         />
         <DashboardCard
-          title="Total de Servicios"
+          title="Servicios Activos"
           value={totalServices}
-          description="Servicios activos"
+          description="Total de servicios"
           icon={Receipt}
-          className="border-l-4 border-finance-secondary"
+          className="border-l-4 border-finance-secondary lg:col-span-1"
         />
         <DashboardCard
-          title="Servicios Completados"
+          title="Servicios Pagados"
           value={completedServices}
-          description="Servicios facturados y pagados"
+          description="Facturados y pagados"
           icon={CheckCircle}
-          className="border-l-4 border-green-500"
+          className="border-l-4 border-green-500 lg:col-span-1"
         />
       </div>
 
-      <div className="animate-in">
-        <ServiceTable />
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in">
+        <div className="lg:col-span-2">
+          <Card>
+            <CardHeader>
+              <CardTitle>Últimos servicios</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ServiceTable limit={5} />
+            </CardContent>
+          </Card>
+        </div>
+        
+        <div className="lg:col-span-1">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle>Clientes con adeudo</CardTitle>
+              <Button variant="ghost" size="sm" asChild>
+                <Link to="/clientes">Ver todos</Link>
+              </Button>
+            </CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead className="text-right">Adeudo</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {topClients.map((client) => (
+                    <TableRow key={client.id}>
+                      <TableCell>
+                        <div>
+                          <p className="font-medium">{client.name}</p>
+                          <p className="text-sm text-muted-foreground">{client.company}</p>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-right font-medium">
+                        ${client.pendingBalance.toLocaleString('es-MX')}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

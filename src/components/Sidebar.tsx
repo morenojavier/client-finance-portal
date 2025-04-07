@@ -8,7 +8,8 @@ import {
   LogOut, 
   Menu, 
   X,
-  CreditCard
+  CreditCard,
+  Users
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,11 @@ const Sidebar = ({ isMobile, toggleSidebar }: SidebarProps) => {
       name: "Dashboard",
       path: "/dashboard",
       icon: LayoutDashboard,
+    },
+    {
+      name: "Clientes",
+      path: "/clientes",
+      icon: Users,
     },
     {
       name: "Servicios",
