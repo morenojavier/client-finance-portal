@@ -13,6 +13,7 @@ import AccountSettings from "@/pages/AccountSettings";
 import PublicServicesPage from "@/pages/PublicServicesPage";
 import PaymentDetailsPage from "@/pages/PaymentDetailsPage";
 import RecuperarPassword from "@/pages/RecuperarPassword";
+import LandingPage from "@/pages/LandingPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,7 +26,7 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           {/* Public routes */}
-          <Route path="/" element={<Navigate to="/login" replace />} />
+          <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route path="/recuperar-password" element={<RecuperarPassword />} />
           <Route path="/servicios/publico" element={<PublicServicesPage />} />
