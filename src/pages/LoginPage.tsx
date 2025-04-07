@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { 
   Card, 
   CardContent, 
@@ -46,6 +46,13 @@ const LoginPage = () => {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-finance-light to-white p-4">
       <div className="max-w-md w-full animate-in">
+        <div className="flex justify-center mb-6">
+          <img 
+            src="/lovable-uploads/2d8e8f94-d15f-4e1c-9d28-dae088e0a1cb.png" 
+            alt="Logo" 
+            className="h-16 w-auto" 
+          />
+        </div>
         <Card className="w-full">
           <CardHeader>
             <CardTitle>Iniciar Sesión</CardTitle>
@@ -79,12 +86,15 @@ const LoginPage = () => {
                   >
                     Contraseña
                   </label>
-                  <Button
-                    variant="link"
-                    className="text-xs p-0 h-auto text-finance-primary"
-                  >
-                    ¿Olvidaste tu contraseña?
-                  </Button>
+                  <Link to="/recuperar-password">
+                    <Button
+                      variant="link"
+                      className="text-xs p-0 h-auto text-finance-primary"
+                      type="button"
+                    >
+                      ¿Olvidaste tu contraseña?
+                    </Button>
+                  </Link>
                 </div>
                 <Input
                   id="password"
