@@ -1,5 +1,5 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Card, 
   CardContent, 
@@ -26,17 +26,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, Phone, Image } from "lucide-react";
+import { Upload, Phone, Image, FileText } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const AccountSettings = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const [isCSFDialogOpen, setIsCSFDialogOpen] = useState(false);
+  const [isCSFViewDialogOpen, setIsCSFViewDialogOpen] = useState(false);
   const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
   const [csfFile, setCSFFile] = useState<File | null>(null);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string | null>(null);
+  const [hasCSF, setHasCSF] = useState<boolean>(false);
+  const [csfPreview, setCSFPreview] = useState<string | null>(null);
 
   // Mock user data
   const [userData, setUserData] = useState({
@@ -74,7 +77,7 @@ const AccountSettings = () => {
     setTimeout(() => {
       toast({
         title: "Información actualizada",
-        description: "Los datos personales han sido actualizados correctamente."
+        description: "Los datos de la empresa han sido actualizados correctamente."
       });
       setLoading(false);
     }, 1000);
@@ -114,6 +117,13 @@ const AccountSettings = () => {
     if (file) {
       if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
         setCSFFile(file);
+        
+        // Create preview for viewing
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setCSFPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
       } else {
         toast({
           title: "Tipo de archivo no válido",
@@ -157,7 +167,7 @@ const AccountSettings = () => {
           title: "CSF subida correctamente",
           description: `El archivo ${csfFile.name} ha sido subido correctamente.`
         });
-        setCSFFile(null);
+        setHasCSF(true);
         setIsCSFDialogOpen(false);
         setLoading(false);
       }, 1000);
@@ -183,11 +193,18 @@ const AccountSettings = () => {
     }
   };
 
-  // Load saved logo on component mount
-  React.useEffect(() => {
+  // Load saved logo and check if CSF exists on component mount
+  useEffect(() => {
     const savedLogo = localStorage.getItem('companyLogo');
     if (savedLogo) {
       setLogoPreview(savedLogo);
+    }
+    
+    // Check if user has a CSF file (mock implementation)
+    const savedCSF = localStorage.getItem('companyCSF');
+    if (savedCSF) {
+      setHasCSF(true);
+      setCSFPreview(savedCSF);
     }
   }, []);
 
@@ -203,21 +220,21 @@ const AccountSettings = () => {
       <div className="animate-in">
         <Tabs defaultValue="personal" className="w-full">
           <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="personal">Datos Personales</TabsTrigger>
+            <TabsTrigger value="personal">Datos de mi empresa</TabsTrigger>
             <TabsTrigger value="password">Contraseña</TabsTrigger>
           </TabsList>
           
           <TabsContent value="personal">
             <Card>
               <CardHeader>
-                <CardTitle>Datos Personales</CardTitle>
+                <CardTitle>Datos de mi empresa</CardTitle>
                 <CardDescription>
-                  Actualiza tus datos personales y fiscales
+                  Actualiza los datos de tu empresa y fiscales
                 </CardDescription>
               </CardHeader>
               <form onSubmit={handlePersonalInfoSubmit}>
                 <CardContent className="space-y-4">
-                  {/* Company Logo Section */}
+                  {/* Company Logo Section - First field */}
                   <div className="flex flex-col items-center space-y-3 py-2 border-b pb-6">
                     <Avatar className="h-24 w-24">
                       {logoPreview ? (
@@ -242,59 +259,58 @@ const AccountSettings = () => {
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="cliente" className="text-sm font-medium">
-                        Cliente
-                      </label>
-                      <Input
-                        id="cliente"
-                        name="cliente"
-                        value={userData.cliente}
-                        onChange={handlePersonalInfoChange}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="contacto" className="text-sm font-medium">
-                        Persona de contacto
-                      </label>
-                      <Input
-                        id="contacto"
-                        name="contacto"
-                        value={userData.contacto}
-                        onChange={handlePersonalInfoChange}
-                      />
-                    </div>
+                  {/* Reorganized fields according to the specified order */}
+                  <div className="space-y-2">
+                    <label htmlFor="cliente" className="text-sm font-medium">
+                      Empresa
+                    </label>
+                    <Input
+                      id="cliente"
+                      name="cliente"
+                      value={userData.cliente}
+                      onChange={handlePersonalInfoChange}
+                    />
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <label htmlFor="email" className="text-sm font-medium">
-                        Correo Electrónico
-                      </label>
+                  <div className="space-y-2">
+                    <label htmlFor="contacto" className="text-sm font-medium">
+                      Persona de contacto
+                    </label>
+                    <Input
+                      id="contacto"
+                      name="contacto"
+                      value={userData.contacto}
+                      onChange={handlePersonalInfoChange}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="email" className="text-sm font-medium">
+                      Correo Electrónico
+                    </label>
+                    <Input
+                      id="email"
+                      name="email"
+                      type="email"
+                      value={userData.email}
+                      onChange={handlePersonalInfoChange}
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label htmlFor="telefono" className="text-sm font-medium">
+                      Teléfono / WhatsApp
+                    </label>
+                    <div className="relative">
+                      <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
-                        id="email"
-                        name="email"
-                        type="email"
-                        value={userData.email}
+                        id="telefono"
+                        name="telefono"
+                        type="tel"
+                        className="pl-8"
+                        value={userData.telefono}
                         onChange={handlePersonalInfoChange}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <label htmlFor="telefono" className="text-sm font-medium">
-                        Teléfono / WhatsApp
-                      </label>
-                      <div className="relative">
-                        <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="telefono"
-                          name="telefono"
-                          type="tel"
-                          className="pl-8"
-                          value={userData.telefono}
-                          onChange={handlePersonalInfoChange}
-                        />
-                      </div>
                     </div>
                   </div>
 
@@ -306,18 +322,6 @@ const AccountSettings = () => {
                       id="razonSocial"
                       name="razonSocial"
                       value={userData.razonSocial}
-                      onChange={handlePersonalInfoChange}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <label htmlFor="rfc" className="text-sm font-medium">
-                      RFC
-                    </label>
-                    <Input
-                      id="rfc"
-                      name="rfc"
-                      value={userData.rfc}
                       onChange={handlePersonalInfoChange}
                     />
                   </div>
@@ -335,16 +339,51 @@ const AccountSettings = () => {
                     />
                   </div>
 
-                  <div className="pt-2">
-                    <Button 
-                      type="button" 
-                      variant="outline"
-                      onClick={() => setIsCSFDialogOpen(true)}
-                      className="flex items-center gap-2"
-                    >
-                      <Upload className="h-4 w-4" />
-                      Agregar CSF
-                    </Button>
+                  <div className="space-y-2">
+                    <label htmlFor="rfc" className="text-sm font-medium">
+                      RFC
+                    </label>
+                    <Input
+                      id="rfc"
+                      name="rfc"
+                      value={userData.rfc}
+                      onChange={handlePersonalInfoChange}
+                    />
+                  </div>
+
+                  <div className="pt-2 flex">
+                    {hasCSF ? (
+                      <div className="flex gap-2">
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => setIsCSFViewDialogOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <FileText className="h-4 w-4" />
+                          Ver CSF
+                        </Button>
+                        <Button 
+                          type="button" 
+                          variant="outline"
+                          onClick={() => setIsCSFDialogOpen(true)}
+                          className="flex items-center gap-2"
+                        >
+                          <Upload className="h-4 w-4" />
+                          Cambiar CSF
+                        </Button>
+                      </div>
+                    ) : (
+                      <Button 
+                        type="button" 
+                        variant="outline"
+                        onClick={() => setIsCSFDialogOpen(true)}
+                        className="flex items-center gap-2"
+                      >
+                        <Upload className="h-4 w-4" />
+                        Agregar CSF
+                      </Button>
+                    )}
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -463,6 +502,43 @@ const AccountSettings = () => {
             <Button onClick={handleCSFUpload} disabled={!csfFile || loading}>
               <Upload className="mr-2 h-4 w-4" />
               {loading ? "Subiendo..." : "Subir CSF"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para ver CSF */}
+      <Dialog open={isCSFViewDialogOpen} onOpenChange={setIsCSFViewDialogOpen}>
+        <DialogContent className="sm:max-w-[700px]">
+          <DialogHeader>
+            <DialogTitle>Constancia de Situación Fiscal</DialogTitle>
+          </DialogHeader>
+          
+          <div className="flex justify-center py-4">
+            {csfPreview && csfPreview.startsWith('data:image') ? (
+              <img src={csfPreview} alt="Constancia de Situación Fiscal" className="max-h-[500px] object-contain" />
+            ) : csfPreview && csfPreview.startsWith('data:application/pdf') ? (
+              <div className="w-full h-[500px] flex flex-col items-center justify-center">
+                <FileText className="h-16 w-16 text-muted-foreground" />
+                <p className="mt-2 text-muted-foreground">Vista previa de PDF no disponible</p>
+                <Button 
+                  className="mt-4" 
+                  onClick={() => window.open(csfPreview, '_blank')}
+                >
+                  Abrir PDF
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center text-muted-foreground">
+                <FileText className="h-16 w-16 mx-auto text-muted-foreground" />
+                <p className="mt-2">No hay CSF disponible</p>
+              </div>
+            )}
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCSFViewDialogOpen(false)}>
+              Cerrar
             </Button>
           </DialogFooter>
         </DialogContent>
