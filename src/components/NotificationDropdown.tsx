@@ -57,7 +57,7 @@ const NotificationDropdown = ({
             <DropdownMenuItem
               key={notification.id}
               onClick={() => handleSelect(notification.id)}
-              className={`p-3 cursor-pointer ${!notification.read ? "bg-slate-50" : ""}`}
+              className={`p-3 cursor-pointer hover:bg-slate-100 ${!notification.read ? "bg-slate-50" : ""}`}
             >
               <div className="w-full">
                 <div className="flex justify-between items-start">
@@ -68,7 +68,7 @@ const NotificationDropdown = ({
                     <span className="h-2 w-2 bg-finance-secondary rounded-full flex-shrink-0 mt-1"></span>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-1">
+                <p className="text-xs text-white mt-1 bg-finance-primary px-2 py-0.5 rounded-full inline-block">
                   {notification.date.toLocaleDateString("es-MX", {
                     day: "numeric",
                     month: "short",
