@@ -5,7 +5,8 @@ import {
   Search, 
   User, 
   Edit, 
-  Trash2, 
+  Archive,
+  RefreshCw,
   Eye,
   FileText 
 } from "lucide-react";
@@ -22,6 +23,7 @@ import {
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -30,6 +32,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel } from "@/components/
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { Separator } from "@/components/ui/separator";
 
 // Interfaces
 interface Client {
@@ -40,6 +43,7 @@ interface Client {
   company: string;
   pendingBalance: number;
   createdAt: string;
+  archived?: boolean;
 }
 
 const ClientsPage = () => {
@@ -52,6 +56,7 @@ const ClientsPage = () => {
       company: "Empresa A",
       pendingBalance: 5000,
       createdAt: "2023-01-15",
+      archived: false,
     },
     {
       id: "2",
@@ -61,6 +66,7 @@ const ClientsPage = () => {
       company: "Negocio B",
       pendingBalance: 7500,
       createdAt: "2023-02-20",
+      archived: false,
     },
     {
       id: "3",
@@ -70,6 +76,17 @@ const ClientsPage = () => {
       company: "Startup C",
       pendingBalance: 3000,
       createdAt: "2023-03-10",
+      archived: false,
+    },
+    {
+      id: "4",
+      name: "Ana Martínez",
+      email: "ana@antiguocliente.com",
+      phone: "555-3456",
+      company: "Antiguos Negocios",
+      pendingBalance: 0,
+      createdAt: "2022-05-18",
+      archived: true,
     },
   ]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -91,7 +108,16 @@ const ClientsPage = () => {
     setSearchTerm(e.target.value);
   };
   
-  const filteredClients = clients.filter((client) =>
+  const activeClients = clients.filter(client => !client.archived);
+  const archivedClients = clients.filter(client => client.archived);
+  
+  const filteredActiveClients = activeClients.filter((client) =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    client.company.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+  
+  const filteredArchivedClients = archivedClients.filter((client) =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     client.company.toLowerCase().includes(searchTerm.toLowerCase())
@@ -139,6 +165,7 @@ const ClientsPage = () => {
         ...values,
         pendingBalance: 0,
         createdAt: new Date().toISOString().split('T')[0],
+        archived: false,
       };
       setClients([...clients, newClient]);
       toast({
@@ -149,15 +176,37 @@ const ClientsPage = () => {
     setOpenDialog(false);
   };
   
-  const handleDeleteClient = (clientId: string) => {
-    const clientToDelete = clients.find(client => client.id === clientId);
-    if (!clientToDelete) return;
+  const handleArchiveClient = (clientId: string) => {
+    const clientToArchive = clients.find(client => client.id === clientId);
+    if (!clientToArchive) return;
     
-    setClients(clients.filter(client => client.id !== clientId));
+    const updatedClients = clients.map(client => 
+      client.id === clientId 
+        ? { ...client, archived: true } 
+        : client
+    );
+    
+    setClients(updatedClients);
     toast({
-      title: "Cliente eliminado",
-      description: `${clientToDelete.name} ha sido eliminado correctamente.`,
-      variant: "destructive",
+      title: "Cliente archivado",
+      description: `${clientToArchive.name} ha sido archivado correctamente.`,
+    });
+  };
+  
+  const handleActivateClient = (clientId: string) => {
+    const clientToActivate = clients.find(client => client.id === clientId);
+    if (!clientToActivate) return;
+    
+    const updatedClients = clients.map(client => 
+      client.id === clientId 
+        ? { ...client, archived: false } 
+        : client
+    );
+    
+    setClients(updatedClients);
+    toast({
+      title: "Cliente activado",
+      description: `${clientToActivate.name} ha sido activado correctamente.`,
     });
   };
   
@@ -208,8 +257,8 @@ const ClientsPage = () => {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredClients.length > 0 ? (
-                filteredClients.map((client) => (
+              {filteredActiveClients.length > 0 ? (
+                filteredActiveClients.map((client) => (
                   <TableRow key={client.id}>
                     <TableCell>
                       <div className="flex items-center">
@@ -247,10 +296,10 @@ const ClientsPage = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          onClick={() => handleDeleteClient(client.id)}
-                          title="Eliminar cliente"
+                          onClick={() => handleArchiveClient(client.id)}
+                          title="Archivar cliente"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          <Archive className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
@@ -261,7 +310,7 @@ const ClientsPage = () => {
                   <TableCell colSpan={4} className="text-center py-8">
                     <div className="flex flex-col items-center justify-center">
                       <FileText className="h-10 w-10 text-muted-foreground mb-2" />
-                      <h3 className="text-lg font-medium">No se encontraron clientes</h3>
+                      <h3 className="text-lg font-medium">No se encontraron clientes activos</h3>
                       <p className="text-muted-foreground mt-1">
                         {searchTerm ? 'Prueba con otra búsqueda' : 'Agrega tu primer cliente para comenzar'}
                       </p>
@@ -272,6 +321,83 @@ const ClientsPage = () => {
             </TableBody>
           </Table>
         </div>
+        
+        {/* Separator and archived clients section */}
+        {(archivedClients.length > 0) && (
+          <div className="mt-8">
+            <div className="px-4 pb-2">
+              <div className="flex items-center">
+                <Archive className="h-4 w-4 text-muted-foreground mr-2" />
+                <h2 className="text-lg font-medium">Clientes archivados</h2>
+              </div>
+              <Separator className="my-2" />
+            </div>
+            
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Cliente</TableHead>
+                    <TableHead>Empresa</TableHead>
+                    <TableHead>Adeudo</TableHead>
+                    <TableHead className="text-right">Acciones</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {filteredArchivedClients.length > 0 ? (
+                    filteredArchivedClients.map((client) => (
+                      <TableRow key={client.id} className="bg-muted/30">
+                        <TableCell>
+                          <div className="flex items-center">
+                            <div className="h-9 w-9 rounded-full bg-gray-100 flex items-center justify-center mr-3">
+                              <User className="h-4 w-4 text-gray-500" />
+                            </div>
+                            <div>
+                              <p className="font-medium">{client.name}</p>
+                              <p className="text-sm text-muted-foreground">{client.email}</p>
+                            </div>
+                          </div>
+                        </TableCell>
+                        <TableCell>{client.company}</TableCell>
+                        <TableCell className="font-medium">
+                          ${client.pendingBalance.toLocaleString('es-MX')}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => goToClientDashboard(client.id)}
+                              title="Ver estado de cuenta"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => handleActivateClient(client.id)}
+                              title="Activar cliente"
+                            >
+                              <RefreshCw className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={4} className="text-center py-6">
+                        <p className="text-muted-foreground">
+                          {searchTerm ? 'No se encontraron clientes archivados que coincidan con tu búsqueda' : 'No hay clientes archivados'}
+                        </p>
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </div>
+        )}
       </div>
 
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
@@ -280,6 +406,11 @@ const ClientsPage = () => {
             <DialogTitle>
               {editingClient ? 'Editar Cliente' : 'Nuevo Cliente'}
             </DialogTitle>
+            <DialogDescription>
+              {editingClient 
+                ? 'Modifica los datos del cliente según sea necesario.' 
+                : 'Completa la información para agregar un nuevo cliente.'}
+            </DialogDescription>
           </DialogHeader>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(handleSubmitClient)} className="space-y-4">
