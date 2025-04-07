@@ -10,7 +10,7 @@ import {
   CircleDollarSign
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ServiceTable from "@/components/ServiceTable";
+import CustomServiceTable from "@/components/CustomServiceTable";
 import DashboardCard from "@/components/DashboardCard";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 
@@ -165,7 +165,7 @@ const ClientDashboard = () => {
       </div>
 
       <div className="animate-in">
-        <ServiceTable clientId={clientId} />
+        <CustomServiceTable clientId={clientId} />
       </div>
 
       {!isPublicView && (

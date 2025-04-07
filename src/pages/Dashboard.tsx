@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardCard from "@/components/DashboardCard";
-import ServiceTable from "@/components/ServiceTable";
+import CustomServiceTable from "@/components/CustomServiceTable";
 import { 
   DollarSign, 
   Receipt, 
@@ -122,7 +122,7 @@ const Dashboard = () => {
               <CardTitle>Últimos servicios</CardTitle>
             </CardHeader>
             <CardContent>
-              <ServiceTable limit={5} />
+              <CustomServiceTable limit={5} />
             </CardContent>
           </Card>
         </div>
