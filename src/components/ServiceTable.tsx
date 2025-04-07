@@ -219,6 +219,26 @@ const ServiceTable = () => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat("es-MX").format(date);
   };
+  
+  // Function to check if a date is from a previous month
+  const isPreviousMonth = (dateString: string) => {
+    const currentDate = new Date();
+    const serviceDate = new Date(dateString);
+    
+    // Check if the service date is from a previous month
+    return (
+      serviceDate.getMonth() < currentDate.getMonth() ||
+      serviceDate.getFullYear() < currentDate.getFullYear()
+    );
+  };
+  
+  // Function to determine row color based on payment status and date
+  const getRowColorClass = (service: Service) => {
+    if (service.pago_cliente === "pendiente" && isPreviousMonth(service.fecha)) {
+      return "bg-red-50"; // Light red background for urgent pending payments
+    }
+    return ""; // Default background
+  };
 
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -375,7 +395,10 @@ const ServiceTable = () => {
             <TableBody>
               {currentServices.length > 0 ? (
                 currentServices.map((service) => (
-                  <TableRow key={service.id}>
+                  <TableRow 
+                    key={service.id}
+                    className={getRowColorClass(service)}
+                  >
                     {columnVisibility.fecha && <TableCell>{formatDate(service.fecha)}</TableCell>}
                     {columnVisibility.cliente && <TableCell>{service.cliente}</TableCell>}
                     {columnVisibility.concepto && <TableCell>{service.concepto}</TableCell>}
