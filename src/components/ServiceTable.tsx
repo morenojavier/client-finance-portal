@@ -61,6 +61,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { useLocation } from "react-router-dom";
 
 interface Service {
   id: string;
@@ -179,6 +180,8 @@ const ServiceTable = () => {
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const servicesPerPage = 5;
+  const location = useLocation();
+  const isPublicView = location.pathname.includes('/publico');
   
   const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
     fecha: true,
@@ -289,66 +292,68 @@ const ServiceTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon">
-                <Filter className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuItem disabled className="font-medium">
-                Mostrar/Ocultar Columnas
-              </DropdownMenuItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.fecha}
-                onCheckedChange={() => handleColumnToggle("fecha")}
-              >
-                Fecha
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.cliente}
-                onCheckedChange={() => handleColumnToggle("cliente")}
-              >
-                Cliente
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.concepto}
-                onCheckedChange={() => handleColumnToggle("concepto")}
-              >
-                Concepto
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.descripcion}
-                onCheckedChange={() => handleColumnToggle("descripcion")}
-              >
-                Descripción
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.total}
-                onCheckedChange={() => handleColumnToggle("total")}
-              >
-                Total
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.estatus_factura}
-                onCheckedChange={() => handleColumnToggle("estatus_factura")}
-              >
-                Estatus Factura
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.pago_cliente}
-                onCheckedChange={() => handleColumnToggle("pago_cliente")}
-              >
-                Pago Cliente
-              </DropdownMenuCheckboxItem>
-              <DropdownMenuCheckboxItem
-                checked={columnVisibility.archivo}
-                onCheckedChange={() => handleColumnToggle("archivo")}
-              >
-                Archivo
-              </DropdownMenuCheckboxItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!isPublicView && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Filter className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuItem disabled className="font-medium">
+                  Mostrar/Ocultar Columnas
+                </DropdownMenuItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.fecha}
+                  onCheckedChange={() => handleColumnToggle("fecha")}
+                >
+                  Fecha
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.cliente}
+                  onCheckedChange={() => handleColumnToggle("cliente")}
+                >
+                  Cliente
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.concepto}
+                  onCheckedChange={() => handleColumnToggle("concepto")}
+                >
+                  Concepto
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.descripcion}
+                  onCheckedChange={() => handleColumnToggle("descripcion")}
+                >
+                  Descripción
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.total}
+                  onCheckedChange={() => handleColumnToggle("total")}
+                >
+                  Total
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.estatus_factura}
+                  onCheckedChange={() => handleColumnToggle("estatus_factura")}
+                >
+                  Estatus Factura
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.pago_cliente}
+                  onCheckedChange={() => handleColumnToggle("pago_cliente")}
+                >
+                  Pago Cliente
+                </DropdownMenuCheckboxItem>
+                <DropdownMenuCheckboxItem
+                  checked={columnVisibility.archivo}
+                  onCheckedChange={() => handleColumnToggle("archivo")}
+                >
+                  Archivo
+                </DropdownMenuCheckboxItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -426,58 +431,74 @@ const ServiceTable = () => {
                     )}
                     {columnVisibility.archivo && (
                       <TableCell>
-                        <Button 
-                          variant="outline" 
-                          size="sm" 
-                          onClick={() => handleFileAction(service.id, !!service.hasFile)}
-                          className="flex items-center gap-1"
-                        >
-                          {service.hasFile ? (
-                            <>
+                        {isPublicView ? (
+                          service.hasFile ? (
+                            <Button 
+                              variant="outline" 
+                              size="sm" 
+                              onClick={() => handleFileAction(service.id, true)}
+                              className="flex items-center gap-1"
+                            >
                               <Eye className="h-3 w-3" />
                               <span className="hidden sm:inline">Ver</span>
-                            </>
-                          ) : (
-                            <>
-                              <PaperclipIcon className="h-3 w-3" />
-                              <span className="hidden sm:inline">Adjuntar</span>
-                            </>
-                          )}
-                        </Button>
+                            </Button>
+                          ) : null
+                        ) : (
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => handleFileAction(service.id, !!service.hasFile)}
+                            className="flex items-center gap-1"
+                          >
+                            {service.hasFile ? (
+                              <>
+                                <Eye className="h-3 w-3" />
+                                <span className="hidden sm:inline">Ver</span>
+                              </>
+                            ) : (
+                              <>
+                                <PaperclipIcon className="h-3 w-3" />
+                                <span className="hidden sm:inline">Adjuntar</span>
+                              </>
+                            )}
+                          </Button>
+                        )}
                       </TableCell>
                     )}
                     <TableCell className="text-right">
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {service.estatus_factura === "generada" && (
-                            <>
+                      {!isPublicView && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {service.estatus_factura === "generada" && (
+                              <>
+                                <DropdownMenuItem className="flex items-center">
+                                  <Download className="mr-2 h-4 w-4" />
+                                  <span>Descargar PDF</span>
+                                </DropdownMenuItem>
+                                <DropdownMenuItem className="flex items-center">
+                                  <FileText className="mr-2 h-4 w-4" />
+                                  <span>Descargar XML</span>
+                                </DropdownMenuItem>
+                              </>
+                            )}
+                            {service.pago_cliente === "pendiente" && (
                               <DropdownMenuItem className="flex items-center">
-                                <Download className="mr-2 h-4 w-4" />
-                                <span>Descargar PDF</span>
+                                <Upload className="mr-2 h-4 w-4" />
+                                <span>Subir Comprobante</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem className="flex items-center">
-                                <FileText className="mr-2 h-4 w-4" />
-                                <span>Descargar XML</span>
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                          {service.pago_cliente === "pendiente" && (
-                            <DropdownMenuItem className="flex items-center">
-                              <Upload className="mr-2 h-4 w-4" />
-                              <span>Subir Comprobante</span>
-                            </DropdownMenuItem>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </TableCell>
                   </TableRow>
                 ))
@@ -588,7 +609,10 @@ const ServiceTable = () => {
           <DialogHeader>
             <DialogTitle>Archivo adjunto</DialogTitle>
             <DialogDescription>
-              Puedes ver o reemplazar el archivo adjunto a este servicio.
+              {isPublicView ? 
+                "Vista previa del archivo adjunto a este servicio." : 
+                "Puedes ver o reemplazar el archivo adjunto a este servicio."
+              }
             </DialogDescription>
           </DialogHeader>
           
@@ -600,29 +624,33 @@ const ServiceTable = () => {
               </Button>
             </div>
             
-            <div className="grid w-full items-center gap-2 border-t pt-4">
-              <p className="text-sm font-medium">¿Deseas reemplazar este archivo?</p>
-              <Input
-                type="file"
-                accept="image/*,.pdf"
-                onChange={handleFileChange}
-              />
-              {fileToUpload && (
-                <div className="text-sm text-muted-foreground">
-                  Archivo seleccionado: {fileToUpload.name}
-                </div>
-              )}
-            </div>
+            {!isPublicView && (
+              <div className="grid w-full items-center gap-2 border-t pt-4">
+                <p className="text-sm font-medium">¿Deseas reemplazar este archivo?</p>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={handleFileChange}
+                />
+                {fileToUpload && (
+                  <div className="text-sm text-muted-foreground">
+                    Archivo seleccionado: {fileToUpload.name}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
           
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsViewFileOpen(false)}>
-              Cancelar
+              Cerrar
             </Button>
-            <Button onClick={handleUploadSubmit} disabled={!fileToUpload}>
-              <Upload className="mr-2 h-4 w-4" />
-              Reemplazar archivo
-            </Button>
+            {!isPublicView && (
+              <Button onClick={handleUploadSubmit} disabled={!fileToUpload}>
+                <Upload className="mr-2 h-4 w-4" />
+                Reemplazar archivo
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
