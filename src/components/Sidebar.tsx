@@ -63,17 +63,25 @@ const Sidebar = ({ isMobile, toggleSidebar }: SidebarProps) => {
       )}
 
       <div className="flex items-center justify-center py-6">
-        <h1 className={cn(
-          "font-bold text-sidebar-foreground text-xl transition-all duration-300 overflow-hidden",
+        <div className={cn(
+          "transition-all duration-300 overflow-hidden",
           isMobile ? "block" : "hidden group-hover:block"
         )}>
-          Estado de cuenta
-        </h1>
+          <img 
+            src="/lovable-uploads/2d8e8f94-d15f-4e1c-9d28-dae088e0a1cb.png" 
+            alt="Logo" 
+            className="h-12 w-auto" 
+          />
+        </div>
         <div className={cn(
-          "font-bold text-sidebar-foreground text-2xl", 
+          "transition-all", 
           isMobile ? "hidden" : "block group-hover:hidden"
         )}>
-          EC
+          <img 
+            src="/lovable-uploads/2d8e8f94-d15f-4e1c-9d28-dae088e0a1cb.png" 
+            alt="Logo" 
+            className="h-8 w-auto" 
+          />
         </div>
       </div>
 
