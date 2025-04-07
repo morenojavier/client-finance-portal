@@ -26,12 +26,18 @@ const Dashboard = () => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 animate-in">
         <DashboardCard
-          title="Saldo Total"
+          title="Adeudo Total"
           value={`$${totalBalance.toLocaleString('es-MX')}`}
           description="Valor actual de tus servicios"
           icon={DollarSign}
-          trend={{ value: 12, positive: true }}
           className="border-l-4 border-finance-primary"
+        />
+        <DashboardCard
+          title="Pagos Pendientes"
+          value={pendingPayments}
+          description="Servicios con pago pendiente"
+          icon={AlertCircle}
+          className="border-l-4 border-orange-500"
         />
         <DashboardCard
           title="Total de Servicios"
@@ -46,13 +52,6 @@ const Dashboard = () => {
           description="Servicios facturados y pagados"
           icon={CheckCircle}
           className="border-l-4 border-green-500"
-        />
-        <DashboardCard
-          title="Pagos Pendientes"
-          value={pendingPayments}
-          description="Servicios con pago pendiente"
-          icon={AlertCircle}
-          className="border-l-4 border-orange-500"
         />
       </div>
 
