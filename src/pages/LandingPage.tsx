@@ -179,11 +179,11 @@ const LandingPage = () => {
               <CarouselItem>
                 <div className="bg-white p-4 rounded-lg shadow-md">
                   <img 
-                    src="/placeholder.svg" 
-                    alt="Dashboard de ProBalance" 
-                    className="rounded-md w-full aspect-video object-cover bg-gray-100"
+                    src="/lovable-uploads/3f883f06-42e8-46c7-ab4d-58b57b34b955.png" 
+                    alt="Estado de cuenta de ProBalance" 
+                    className="rounded-md w-full aspect-video object-cover"
                   />
-                  <p className="mt-3 text-center text-gray-700 font-medium">Estado de cuenta simplificado</p>
+                  <p className="mt-3 text-center text-gray-700 font-medium">Estado de cuenta detallado</p>
                 </div>
               </CarouselItem>
               <CarouselItem>
