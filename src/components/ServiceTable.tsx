@@ -12,7 +12,8 @@ import {
   DropdownMenu, 
   DropdownMenuContent, 
   DropdownMenuItem, 
-  DropdownMenuTrigger 
+  DropdownMenuTrigger,
+  DropdownMenuCheckboxItem
 } from "@/components/ui/dropdown-menu";
 import { 
   Card, 
@@ -40,87 +41,169 @@ import {
   Search,
   FileImage,
   PaperclipIcon,
-  Info
+  Info,
+  Eye
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
 import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 interface Service {
   id: string;
   fecha: string;
+  cliente: string;
   concepto: string;
   descripcion: string;
   total: number;
   estatus_factura: "generada" | "pendiente";
   pago_cliente: "pagada" | "pendiente";
+  hasFile?: boolean;
 }
 
 const mockServices: Service[] = [
   {
     id: "1",
     fecha: "2023-03-01",
+    cliente: "Empresa A",
     concepto: "Asesoría Financiera",
     descripcion: "Asesoría mensual de finanzas empresariales",
     total: 5000,
     estatus_factura: "generada",
     pago_cliente: "pagada",
+    hasFile: true
   },
   {
     id: "2",
     fecha: "2023-03-15",
+    cliente: "Empresa B",
     concepto: "Soporte Técnico",
     descripcion: "Soporte técnico para sistemas de contabilidad",
     total: 3500,
     estatus_factura: "generada",
-    pago_cliente: "pendiente",
+    pago_cliente: "pendiente"
   },
   {
     id: "3",
     fecha: "2023-04-01",
+    cliente: "Empresa A",
     concepto: "Asesoría Financiera",
     descripcion: "Asesoría mensual de finanzas empresariales",
     total: 5000,
     estatus_factura: "pendiente",
-    pago_cliente: "pendiente",
+    pago_cliente: "pendiente"
   },
   {
     id: "4",
     fecha: "2023-04-10",
+    cliente: "Empresa C",
     concepto: "Consultoría Fiscal",
     descripcion: "Análisis de obligaciones fiscales",
     total: 7500,
     estatus_factura: "generada",
     pago_cliente: "pagada",
+    hasFile: true
   },
   {
     id: "5",
     fecha: "2023-05-01",
+    cliente: "Empresa A",
     concepto: "Asesoría Financiera",
     descripcion: "Asesoría mensual de finanzas empresariales",
     total: 5000,
     estatus_factura: "generada",
-    pago_cliente: "pendiente",
+    pago_cliente: "pendiente"
+  },
+  {
+    id: "6",
+    fecha: "2023-05-15",
+    cliente: "Empresa D",
+    concepto: "Consultoría Legal",
+    descripcion: "Asesoría legal para cumplimiento normativo",
+    total: 6200,
+    estatus_factura: "pendiente",
+    pago_cliente: "pendiente"
+  },
+  {
+    id: "7",
+    fecha: "2023-06-01",
+    cliente: "Empresa A",
+    concepto: "Asesoría Financiera",
+    descripcion: "Asesoría mensual de finanzas empresariales",
+    total: 5000,
+    estatus_factura: "generada",
+    pago_cliente: "pendiente"
+  },
+  {
+    id: "8",
+    fecha: "2023-06-20",
+    cliente: "Empresa B",
+    concepto: "Capacitación",
+    descripcion: "Capacitación en herramientas de contabilidad",
+    total: 4500,
+    estatus_factura: "generada",
+    pago_cliente: "pagada"
   },
 ];
+
+interface ColumnVisibility {
+  fecha: boolean;
+  cliente: boolean;
+  concepto: boolean;
+  descripcion: boolean;
+  total: boolean;
+  estatus_factura: boolean;
+  pago_cliente: boolean;
+  archivo: boolean;
+}
 
 const ServiceTable = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [services] = useState<Service[]>(mockServices);
   const [isUploadOpen, setIsUploadOpen] = useState(false);
+  const [isViewFileOpen, setIsViewFileOpen] = useState(false);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
-  const [expandedDescriptions, setExpandedDescriptions] = useState<Record<string, boolean>>({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const servicesPerPage = 5;
+  
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
+    fecha: true,
+    cliente: true,
+    concepto: true,
+    descripcion: true,
+    total: true,
+    estatus_factura: true,
+    pago_cliente: true,
+    archivo: true
+  });
 
+  // Apply search filter
   const filteredServices = services.filter(
     (service) =>
       service.concepto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+      service.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      service.cliente.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Apply pagination
+  const indexOfLastService = currentPage * servicesPerPage;
+  const indexOfFirstService = indexOfLastService - servicesPerPage;
+  const currentServices = filteredServices.slice(indexOfFirstService, indexOfLastService);
+  const totalPages = Math.ceil(filteredServices.length / servicesPerPage);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-MX", {
@@ -151,9 +234,13 @@ const ServiceTable = () => {
     }
   };
 
-  const handleUploadClick = (serviceId: string) => {
+  const handleFileAction = (serviceId: string, hasFile: boolean) => {
     setSelectedServiceId(serviceId);
-    setIsUploadOpen(true);
+    if (hasFile) {
+      setIsViewFileOpen(true);
+    } else {
+      setIsUploadOpen(true);
+    }
   };
 
   const handleUploadSubmit = () => {
@@ -177,11 +264,15 @@ const ServiceTable = () => {
     }
   };
 
-  const toggleDescription = (serviceId: string) => {
-    setExpandedDescriptions(prev => ({
+  const handleColumnToggle = (column: keyof ColumnVisibility) => {
+    setColumnVisibility(prev => ({
       ...prev,
-      [serviceId]: !prev[serviceId]
+      [column]: !prev[column]
     }));
+  };
+
+  const paginate = (pageNumber: number) => {
+    setCurrentPage(pageNumber);
   };
 
   return (
@@ -198,9 +289,66 @@ const ServiceTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
-          <Button variant="outline" size="icon">
-            <Filter className="h-4 w-4" />
-          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" size="icon">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuItem disabled className="font-medium">
+                Mostrar/Ocultar Columnas
+              </DropdownMenuItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.fecha}
+                onCheckedChange={() => handleColumnToggle("fecha")}
+              >
+                Fecha
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.cliente}
+                onCheckedChange={() => handleColumnToggle("cliente")}
+              >
+                Cliente
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.concepto}
+                onCheckedChange={() => handleColumnToggle("concepto")}
+              >
+                Concepto
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.descripcion}
+                onCheckedChange={() => handleColumnToggle("descripcion")}
+              >
+                Descripción
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.total}
+                onCheckedChange={() => handleColumnToggle("total")}
+              >
+                Total
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.estatus_factura}
+                onCheckedChange={() => handleColumnToggle("estatus_factura")}
+              >
+                Estatus Factura
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.pago_cliente}
+                onCheckedChange={() => handleColumnToggle("pago_cliente")}
+              >
+                Pago Cliente
+              </DropdownMenuCheckboxItem>
+              <DropdownMenuCheckboxItem
+                checked={columnVisibility.archivo}
+                onCheckedChange={() => handleColumnToggle("archivo")}
+              >
+                Archivo
+              </DropdownMenuCheckboxItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
       </CardHeader>
       <CardContent>
@@ -208,42 +356,47 @@ const ServiceTable = () => {
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Fecha</TableHead>
-                <TableHead>Concepto</TableHead>
-                <TableHead className="hidden md:table-cell">Descripción</TableHead>
-                <TableHead>Total</TableHead>
-                <TableHead className="hidden md:table-cell">Estatus Factura</TableHead>
-                <TableHead>Pago Cliente</TableHead>
-                <TableHead>Archivo</TableHead>
+                {columnVisibility.fecha && <TableHead>Fecha</TableHead>}
+                {columnVisibility.cliente && <TableHead>Cliente</TableHead>}
+                {columnVisibility.concepto && <TableHead>Concepto</TableHead>}
+                {columnVisibility.descripcion && <TableHead className="hidden md:table-cell">Descripción</TableHead>}
+                {columnVisibility.total && <TableHead>Total</TableHead>}
+                {columnVisibility.estatus_factura && <TableHead className="hidden md:table-cell">Estatus Factura</TableHead>}
+                {columnVisibility.pago_cliente && <TableHead>Pago Cliente</TableHead>}
+                {columnVisibility.archivo && <TableHead>Archivo</TableHead>}
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredServices.length > 0 ? (
-                filteredServices.map((service) => (
-                  <React.Fragment key={service.id}>
-                    <TableRow>
-                      <TableCell>{formatDate(service.fecha)}</TableCell>
-                      <TableCell>{service.concepto}</TableCell>
+              {currentServices.length > 0 ? (
+                currentServices.map((service) => (
+                  <TableRow key={service.id}>
+                    {columnVisibility.fecha && <TableCell>{formatDate(service.fecha)}</TableCell>}
+                    {columnVisibility.cliente && <TableCell>{service.cliente}</TableCell>}
+                    {columnVisibility.concepto && <TableCell>{service.concepto}</TableCell>}
+                    {columnVisibility.descripcion && (
                       <TableCell className="hidden md:table-cell">
-                        <Collapsible>
-                          <CollapsibleTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => toggleDescription(service.id)}
-                              className="flex items-center gap-1 p-0 h-auto"
-                            >
-                              <Info className="h-3 w-3" />
-                              <span>Más información</span>
-                            </Button>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="mt-2 text-sm">
-                            {service.descripcion}
-                          </CollapsibleContent>
-                        </Collapsible>
+                        <TooltipProvider>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                className="flex items-center gap-1 p-0 h-auto"
+                              >
+                                <Info className="h-3 w-3" />
+                                <span>Más información</span>
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent className="max-w-sm bg-white text-black">
+                              <p>{service.descripcion}</p>
+                            </TooltipContent>
+                          </Tooltip>
+                        </TooltipProvider>
                       </TableCell>
-                      <TableCell>{formatCurrency(service.total)}</TableCell>
+                    )}
+                    {columnVisibility.total && <TableCell>{formatCurrency(service.total)}</TableCell>}
+                    {columnVisibility.estatus_factura && (
                       <TableCell className="hidden md:table-cell">
                         <Badge
                           variant={service.estatus_factura === "generada" ? "default" : "outline"}
@@ -256,6 +409,8 @@ const ServiceTable = () => {
                           {service.estatus_factura === "generada" ? "Generada" : "Pendiente"}
                         </Badge>
                       </TableCell>
+                    )}
+                    {columnVisibility.pago_cliente && (
                       <TableCell>
                         <Badge
                           variant={service.pago_cliente === "pagada" ? "default" : "outline"}
@@ -268,83 +423,121 @@ const ServiceTable = () => {
                           {service.pago_cliente === "pagada" ? "Pagada" : "Pendiente"}
                         </Badge>
                       </TableCell>
+                    )}
+                    {columnVisibility.archivo && (
                       <TableCell>
                         <Button 
                           variant="outline" 
                           size="sm" 
-                          onClick={() => handleUploadClick(service.id)}
+                          onClick={() => handleFileAction(service.id, !!service.hasFile)}
                           className="flex items-center gap-1"
                         >
-                          <PaperclipIcon className="h-3 w-3" />
-                          <span className="hidden sm:inline">Adjuntar</span>
+                          {service.hasFile ? (
+                            <>
+                              <Eye className="h-3 w-3" />
+                              <span className="hidden sm:inline">Ver</span>
+                            </>
+                          ) : (
+                            <>
+                              <PaperclipIcon className="h-3 w-3" />
+                              <span className="hidden sm:inline">Adjuntar</span>
+                            </>
+                          )}
                         </Button>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {service.estatus_factura === "generada" && (
-                              <>
-                                <DropdownMenuItem className="flex items-center">
-                                  <Download className="mr-2 h-4 w-4" />
-                                  <span>Descargar PDF</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="flex items-center">
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  <span>Descargar XML</span>
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {service.pago_cliente === "pendiente" && (
+                    )}
+                    <TableCell className="text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {service.estatus_factura === "generada" && (
+                            <>
                               <DropdownMenuItem className="flex items-center">
-                                <Upload className="mr-2 h-4 w-4" />
-                                <span>Subir Comprobante</span>
+                                <Download className="mr-2 h-4 w-4" />
+                                <span>Descargar PDF</span>
                               </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    </TableRow>
-                    {/* Mostrar descripción completa en móvil */}
-                    <TableRow className="md:hidden">
-                      <TableCell colSpan={8} className="py-0 px-4">
-                        <Collapsible>
-                          <CollapsibleTrigger asChild>
-                            <Button 
-                              variant="ghost" 
-                              size="sm" 
-                              onClick={() => toggleDescription(service.id)}
-                              className="flex items-center gap-1 p-0 h-auto my-2"
-                            >
-                              <Info className="h-3 w-3" />
-                              <span>Más información</span>
-                            </Button>
-                          </CollapsibleTrigger>
-                          <CollapsibleContent className="py-2 text-sm">
-                            {service.descripcion}
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </TableCell>
-                    </TableRow>
-                  </React.Fragment>
+                              <DropdownMenuItem className="flex items-center">
+                                <FileText className="mr-2 h-4 w-4" />
+                                <span>Descargar XML</span>
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                          {service.pago_cliente === "pendiente" && (
+                            <DropdownMenuItem className="flex items-center">
+                              <Upload className="mr-2 h-4 w-4" />
+                              <span>Subir Comprobante</span>
+                            </DropdownMenuItem>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
                 ))
               ) : (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-6">
+                  <TableCell colSpan={9} className="text-center py-6">
                     No se encontraron servicios
                   </TableCell>
                 </TableRow>
               )}
             </TableBody>
           </Table>
+        </div>
+        
+        {/* Paginación */}
+        <div className="mt-4">
+          <Pagination>
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious 
+                  onClick={() => paginate(Math.max(1, currentPage - 1))}
+                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+              
+              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                const pageNumber = i + 1;
+                return (
+                  <PaginationItem key={i}>
+                    <PaginationLink 
+                      isActive={pageNumber === currentPage}
+                      onClick={() => paginate(pageNumber)}
+                    >
+                      {pageNumber}
+                    </PaginationLink>
+                  </PaginationItem>
+                );
+              })}
+              
+              {totalPages > 5 && (
+                <>
+                  <PaginationItem>
+                    <PaginationEllipsis />
+                  </PaginationItem>
+                  <PaginationItem>
+                    <PaginationLink onClick={() => paginate(totalPages)}>
+                      {totalPages}
+                    </PaginationLink>
+                  </PaginationItem>
+                </>
+              )}
+              
+              <PaginationItem>
+                <PaginationNext 
+                  onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </div>
       </CardContent>
 
@@ -384,6 +577,51 @@ const ServiceTable = () => {
             <Button onClick={handleUploadSubmit}>
               <Upload className="mr-2 h-4 w-4" />
               Subir archivo
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para ver/reemplazar archivos */}
+      <Dialog open={isViewFileOpen} onOpenChange={setIsViewFileOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Archivo adjunto</DialogTitle>
+            <DialogDescription>
+              Puedes ver o reemplazar el archivo adjunto a este servicio.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="flex justify-center">
+              <Button className="flex items-center gap-2" onClick={() => window.open("#", "_blank")}>
+                <FileImage className="h-4 w-4" />
+                <span>Ver archivo</span>
+              </Button>
+            </div>
+            
+            <div className="grid w-full items-center gap-2 border-t pt-4">
+              <p className="text-sm font-medium">¿Deseas reemplazar este archivo?</p>
+              <Input
+                type="file"
+                accept="image/*,.pdf"
+                onChange={handleFileChange}
+              />
+              {fileToUpload && (
+                <div className="text-sm text-muted-foreground">
+                  Archivo seleccionado: {fileToUpload.name}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsViewFileOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleUploadSubmit} disabled={!fileToUpload}>
+              <Upload className="mr-2 h-4 w-4" />
+              Reemplazar archivo
             </Button>
           </DialogFooter>
         </DialogContent>

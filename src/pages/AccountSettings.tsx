@@ -18,15 +18,28 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Upload, Phone } from "lucide-react";
 
 const AccountSettings = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const [isCSFDialogOpen, setIsCSFDialogOpen] = useState(false);
+  const [csfFile, setCSFFile] = useState<File | null>(null);
 
   // Mock user data
   const [userData, setUserData] = useState({
-    nombre: "Cliente Demo",
+    cliente: "Cliente Demo",
+    contacto: "Juan Pérez",
     email: "cliente@ejemplo.com",
+    telefono: "55 1234 5678",
     razonSocial: "Cliente Demo S.A. de C.V.",
     rfc: "CDM980521ABC",
     direccionFiscal: "Avenida Ejemplo 123, Col. Centro, Ciudad de México, CP 12345"
@@ -92,6 +105,38 @@ const AccountSettings = () => {
     }, 1000);
   };
 
+  const handleCSFFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type === 'application/pdf' || file.type.startsWith('image/')) {
+        setCSFFile(file);
+      } else {
+        toast({
+          title: "Tipo de archivo no válido",
+          description: "Por favor, sube un archivo PDF o una imagen.",
+          variant: "destructive"
+        });
+        e.target.value = '';
+      }
+    }
+  };
+
+  const handleCSFUpload = () => {
+    if (csfFile) {
+      setLoading(true);
+      // Mock API call
+      setTimeout(() => {
+        toast({
+          title: "CSF subida correctamente",
+          description: `El archivo ${csfFile.name} ha sido subido correctamente.`
+        });
+        setCSFFile(null);
+        setIsCSFDialogOpen(false);
+        setLoading(false);
+      }, 1000);
+    }
+  };
+
   return (
     <div className="px-4 py-6 space-y-6">
       <div className="animate-in">
@@ -120,16 +165,30 @@ const AccountSettings = () => {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <label htmlFor="nombre" className="text-sm font-medium">
-                        Nombre Completo
+                      <label htmlFor="cliente" className="text-sm font-medium">
+                        Cliente
                       </label>
                       <Input
-                        id="nombre"
-                        name="nombre"
-                        value={userData.nombre}
+                        id="cliente"
+                        name="cliente"
+                        value={userData.cliente}
                         onChange={handlePersonalInfoChange}
                       />
                     </div>
+                    <div className="space-y-2">
+                      <label htmlFor="contacto" className="text-sm font-medium">
+                        Persona de contacto
+                      </label>
+                      <Input
+                        id="contacto"
+                        name="contacto"
+                        value={userData.contacto}
+                        onChange={handlePersonalInfoChange}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label htmlFor="email" className="text-sm font-medium">
                         Correo Electrónico
@@ -141,6 +200,22 @@ const AccountSettings = () => {
                         value={userData.email}
                         onChange={handlePersonalInfoChange}
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <label htmlFor="telefono" className="text-sm font-medium">
+                        Teléfono / WhatsApp
+                      </label>
+                      <div className="relative">
+                        <Phone className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                          id="telefono"
+                          name="telefono"
+                          type="tel"
+                          className="pl-8"
+                          value={userData.telefono}
+                          onChange={handlePersonalInfoChange}
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -179,6 +254,18 @@ const AccountSettings = () => {
                       value={userData.direccionFiscal}
                       onChange={handlePersonalInfoChange}
                     />
+                  </div>
+
+                  <div className="pt-2">
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setIsCSFDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Upload className="h-4 w-4" />
+                      Agregar CSF
+                    </Button>
                   </div>
                 </CardContent>
                 <CardFooter>
@@ -260,6 +347,47 @@ const AccountSettings = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modal para subir CSF */}
+      <Dialog open={isCSFDialogOpen} onOpenChange={setIsCSFDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Agregar CSF</DialogTitle>
+            <DialogDescription>
+              Sube tu Constancia de Situación Fiscal en formato PDF o imagen.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid w-full items-center gap-2">
+              <label htmlFor="csfFile" className="text-sm font-medium">
+                Selecciona un archivo:
+              </label>
+              <Input
+                id="csfFile"
+                type="file"
+                accept="application/pdf,image/*"
+                onChange={handleCSFFileChange}
+              />
+              {csfFile && (
+                <div className="text-sm text-muted-foreground">
+                  Archivo seleccionado: {csfFile.name}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCSFDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleCSFUpload} disabled={!csfFile || loading}>
+              <Upload className="mr-2 h-4 w-4" />
+              {loading ? "Subiendo..." : "Subir CSF"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
