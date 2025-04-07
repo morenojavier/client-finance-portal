@@ -67,13 +67,13 @@ const Sidebar = ({ isMobile, toggleSidebar }: SidebarProps) => {
           "font-bold text-sidebar-foreground text-xl transition-all duration-300 overflow-hidden",
           isMobile ? "block" : "hidden group-hover:block"
         )}>
-          Portal Financiero
+          Estado de cuenta
         </h1>
         <div className={cn(
           "font-bold text-sidebar-foreground text-2xl", 
           isMobile ? "hidden" : "block group-hover:hidden"
         )}>
-          PF
+          EC
         </div>
       </div>
 
