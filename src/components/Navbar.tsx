@@ -1,9 +1,11 @@
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 import NotificationDropdown, { Notification } from "./NotificationDropdown";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 type NavbarProps = {
   toggleSidebar: () => void;
@@ -32,6 +34,16 @@ const Navbar = ({ toggleSidebar, companyName = "Xulabia" }: NavbarProps) => {
       read: true,
     },
   ]);
+
+  const [logoUrl, setLogoUrl] = useState<string | null>(null);
+
+  // Load company logo from localStorage on component mount
+  useEffect(() => {
+    const savedLogo = localStorage.getItem('companyLogo');
+    if (savedLogo) {
+      setLogoUrl(savedLogo);
+    }
+  }, []);
 
   const handleMarkAsRead = (id: string) => {
     setNotifications(
@@ -69,14 +81,20 @@ const Navbar = ({ toggleSidebar, companyName = "Xulabia" }: NavbarProps) => {
             onMarkAsRead={handleMarkAsRead}
           />
         </div>
-        <div className="flex items-center space-x-2">
-          <div className="h-8 w-8 rounded-full bg-finance-primary flex items-center justify-center text-white">
-            C
-          </div>
+        <Link to="/cuenta" className="flex items-center space-x-2 hover:opacity-80 transition-opacity">
+          <Avatar className="h-8 w-8">
+            {logoUrl ? (
+              <AvatarImage src={logoUrl} alt="Logo de empresa" />
+            ) : (
+              <AvatarFallback className="bg-finance-primary text-white">
+                C
+              </AvatarFallback>
+            )}
+          </Avatar>
           <span className="text-sm font-medium hidden md:block">
             Cliente Demo
           </span>
-        </div>
+        </Link>
       </div>
     </header>
   );

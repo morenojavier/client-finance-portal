@@ -26,13 +26,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Upload, Phone } from "lucide-react";
+import { Upload, Phone, Image } from "lucide-react";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 
 const AccountSettings = () => {
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const [isCSFDialogOpen, setIsCSFDialogOpen] = useState(false);
+  const [isLogoDialogOpen, setIsLogoDialogOpen] = useState(false);
   const [csfFile, setCSFFile] = useState<File | null>(null);
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
 
   // Mock user data
   const [userData, setUserData] = useState({
@@ -121,6 +125,29 @@ const AccountSettings = () => {
     }
   };
 
+  const handleLogoFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.type.startsWith('image/')) {
+        setLogoFile(file);
+        
+        // Create preview
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setLogoPreview(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      } else {
+        toast({
+          title: "Tipo de archivo no válido",
+          description: "Por favor, sube una imagen.",
+          variant: "destructive"
+        });
+        e.target.value = '';
+      }
+    }
+  };
+
   const handleCSFUpload = () => {
     if (csfFile) {
       setLoading(true);
@@ -136,6 +163,33 @@ const AccountSettings = () => {
       }, 1000);
     }
   };
+
+  const handleLogoUpload = () => {
+    if (logoFile) {
+      setLoading(true);
+      // Mock API call - in a real app we'd upload to server/storage
+      setTimeout(() => {
+        toast({
+          title: "Logo subido correctamente",
+          description: `La imagen ${logoFile.name} ha sido establecida como logo.`
+        });
+        
+        // In a real app, we'd save the image URL to localStorage or database
+        localStorage.setItem('companyLogo', logoPreview || '');
+        
+        setIsLogoDialogOpen(false);
+        setLoading(false);
+      }, 1000);
+    }
+  };
+
+  // Load saved logo on component mount
+  React.useEffect(() => {
+    const savedLogo = localStorage.getItem('companyLogo');
+    if (savedLogo) {
+      setLogoPreview(savedLogo);
+    }
+  }, []);
 
   return (
     <div className="px-4 py-6 space-y-6">
@@ -163,6 +217,31 @@ const AccountSettings = () => {
               </CardHeader>
               <form onSubmit={handlePersonalInfoSubmit}>
                 <CardContent className="space-y-4">
+                  {/* Company Logo Section */}
+                  <div className="flex flex-col items-center space-y-3 py-2 border-b pb-6">
+                    <Avatar className="h-24 w-24">
+                      {logoPreview ? (
+                        <AvatarImage src={logoPreview} alt="Logo de la empresa" />
+                      ) : (
+                        <AvatarFallback className="text-2xl bg-finance-primary text-white">
+                          {userData.cliente.charAt(0)}
+                        </AvatarFallback>
+                      )}
+                    </Avatar>
+                    <Button 
+                      type="button" 
+                      variant="outline"
+                      onClick={() => setIsLogoDialogOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <Image className="h-4 w-4" />
+                      {logoPreview ? "Cambiar Logo" : "Agregar Logo"}
+                    </Button>
+                    <p className="text-sm text-muted-foreground">
+                      Imagen recomendada: formato cuadrado, mínimo 200x200px
+                    </p>
+                  </div>
+
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <label htmlFor="cliente" className="text-sm font-medium">
@@ -384,6 +463,58 @@ const AccountSettings = () => {
             <Button onClick={handleCSFUpload} disabled={!csfFile || loading}>
               <Upload className="mr-2 h-4 w-4" />
               {loading ? "Subiendo..." : "Subir CSF"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal para subir Logo */}
+      <Dialog open={isLogoDialogOpen} onOpenChange={setIsLogoDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Logo de la Empresa</DialogTitle>
+            <DialogDescription>
+              Sube el logo de tu empresa en formato imagen.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            {logoPreview && (
+              <div className="flex justify-center">
+                <Avatar className="h-32 w-32">
+                  <AvatarImage src={logoPreview} alt="Vista previa del logo" />
+                  <AvatarFallback className="text-4xl">
+                    {userData.cliente.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+              </div>
+            )}
+            
+            <div className="grid w-full items-center gap-2">
+              <label htmlFor="logoFile" className="text-sm font-medium">
+                Selecciona una imagen:
+              </label>
+              <Input
+                id="logoFile"
+                type="file"
+                accept="image/*"
+                onChange={handleLogoFileChange}
+              />
+              {logoFile && (
+                <div className="text-sm text-muted-foreground">
+                  Archivo seleccionado: {logoFile.name}
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsLogoDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleLogoUpload} disabled={!logoFile || loading}>
+              <Upload className="mr-2 h-4 w-4" />
+              {loading ? "Subiendo..." : "Guardar Logo"}
             </Button>
           </DialogFooter>
         </DialogContent>

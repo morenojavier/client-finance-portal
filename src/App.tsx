@@ -10,6 +10,7 @@ import LoginPage from "@/pages/LoginPage";
 import Dashboard from "@/pages/Dashboard";
 import ServicesPage from "@/pages/ServicesPage";
 import AccountSettings from "@/pages/AccountSettings";
+import PublicServicesPage from "@/pages/PublicServicesPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,7 @@ const App = () => (
           {/* Public routes */}
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="/login" element={<LoginPage />} />
+          <Route path="/servicios/publico" element={<PublicServicesPage />} />
 
           {/* Protected routes */}
           <Route path="/" element={<AppLayout />}>
