@@ -1,8 +1,6 @@
-
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardCard from "@/components/DashboardCard";
-import CustomServiceTable from "@/components/CustomServiceTable";
 import { 
   DollarSign, 
   Receipt, 
@@ -12,37 +10,6 @@ import {
   Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-
-// Mock clients data
-const topClients = [
-  {
-    id: "1",
-    name: "Carlos Rodríguez",
-    company: "Empresa A",
-    pendingBalance: 5000,
-  },
-  {
-    id: "2",
-    name: "María González",
-    company: "Negocio B",
-    pendingBalance: 7500,
-  },
-  {
-    id: "3",
-    name: "Juan López",
-    company: "Startup C",
-    pendingBalance: 3000,
-  },
-];
 
 const Dashboard = () => {
   const [totalBalance] = useState(21000);
