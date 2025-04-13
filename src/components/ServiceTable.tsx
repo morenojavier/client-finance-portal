@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { 
   DropdownMenu, 
@@ -38,7 +39,9 @@ import {
   Mail,
   Building,
   CreditCard,
-  Clock
+  Clock,
+  LayoutGrid,
+  LayoutList
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -58,6 +61,7 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 import { useLocation, useNavigate } from "react-router-dom";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 
 interface Service {
   id: string;
@@ -175,6 +179,18 @@ const ServiceTable = () => {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const [viewMode, setViewMode] = useState<"card" | "table">("card");
+  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
+    fecha: true,
+    cliente: true,
+    concepto: true,
+    descripcion: true,
+    total: true,
+    estatus_factura: true,
+    pago_cliente: true,
+    archivo: true
+  });
+  
   const servicesPerPage = 4; // Changed from 5 to 4 for better card layout
   const location = useLocation();
   const navigate = useNavigate();
@@ -318,6 +334,158 @@ const ServiceTable = () => {
     // navigate(`/cliente/${clientId}`);
   };
 
+  // This will be a table view showing services instead of clients grouped by client
+  const renderTableView = () => {
+    // Simple table view showing each service
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse">
+          <thead>
+            <tr className="bg-gray-50 text-left">
+              <th className="p-3 text-sm font-medium">Fecha</th>
+              <th className="p-3 text-sm font-medium">Cliente</th>
+              <th className="p-3 text-sm font-medium">Concepto</th>
+              <th className="p-3 text-sm font-medium">Total</th>
+              <th className="p-3 text-sm font-medium">Estado</th>
+              <th className="p-3 text-sm font-medium">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {services
+              .filter(service => service.cliente.toLowerCase().includes(searchTerm.toLowerCase()))
+              .map(service => (
+                <tr 
+                  key={service.id} 
+                  className={`border-b hover:bg-gray-50 ${getRowColorClass(service)}`}
+                >
+                  <td className="p-3 text-sm">{formatDate(service.fecha)}</td>
+                  <td className="p-3 text-sm">{service.cliente}</td>
+                  <td className="p-3 text-sm">{service.concepto}</td>
+                  <td className="p-3 text-sm font-medium">{formatCurrency(service.total)}</td>
+                  <td className="p-3 text-sm">
+                    <Badge 
+                      variant={service.pago_cliente === "pagada" ? "outline" : "default"}
+                      className={service.pago_cliente === "pagada" ? "bg-green-100 text-green-800" : "bg-orange-100 text-orange-800"}
+                    >
+                      {service.pago_cliente === "pagada" ? "Pagado" : "Pendiente"}
+                    </Badge>
+                  </td>
+                  <td className="p-3 text-sm">
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => handleViewClientDetails(service.cliente)}>
+                        <Eye className="h-3 w-3 mr-1" />
+                        Detalles
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleFileAction(service.id, !!service.hasFile)}
+                        variant={service.hasFile ? "outline" : "default"}
+                      >
+                        {service.hasFile ? (
+                          <>
+                            <FileText className="h-3 w-3 mr-1" />
+                            Ver archivo
+                          </>
+                        ) : (
+                          <>
+                            <Upload className="h-3 w-3 mr-1" />
+                            Subir archivo
+                          </>
+                        )}
+                      </Button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
+          </tbody>
+        </table>
+      </div>
+    );
+  };
+
+  // Card view showing clients (current implementation)
+  const renderCardView = () => {
+    if (currentClients.length > 0) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {currentClients.map((client: any) => (
+            <Card 
+              key={client.cliente} 
+              className="overflow-hidden hover:shadow-md transition-shadow"
+            >
+              <CardContent className="p-5">
+                <div className="flex items-center space-x-4 mb-4">
+                  <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                    <User className="h-6 w-6 text-gray-500" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">{client.cliente}</h3>
+                    <div className="flex items-center space-x-2 text-sm text-gray-500">
+                      <Building className="h-3 w-3" />
+                      <span>Empresa</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-blue-50 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Total de servicios</div>
+                    <div className="font-semibold">{client.services.length}</div>
+                  </div>
+                  <div className="bg-orange-50 p-3 rounded-lg">
+                    <div className="text-xs text-gray-500 mb-1">Pagos pendientes</div>
+                    <div className="font-semibold">
+                      {client.services.filter((s: any) => s.pago_cliente === "pendiente").length}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                  <div>
+                    <div className="text-xs text-gray-500 mb-1">Adeudo</div>
+                    <div className="font-bold text-lg">{formatCurrency(client.totalPending)}</div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={() => handleViewClientDetails(client.cliente)}
+                      className="flex items-center gap-1"
+                    >
+                      <Eye className="h-3 w-3" />
+                      <span>Detalles</span>
+                    </Button>
+                    <Button 
+                      variant={client.totalPending > 0 ? "default" : "outline"}
+                      size="sm"
+                      className={cn(
+                        "flex items-center gap-1",
+                        client.totalPending > 0 ? "bg-blue-600" : ""
+                      )}
+                    >
+                      <CreditCard className="h-3 w-3" />
+                      <span>{client.totalPending > 0 ? "Pagar" : "Pagado"}</span>
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      );
+    } else {
+      return (
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+          <h3 className="text-lg font-medium">No se encontraron clientes</h3>
+          <p className="text-muted-foreground mt-1">
+            {searchTerm ? 'Prueba con otra búsqueda' : 'No hay clientes para mostrar'}
+          </p>
+        </div>
+      );
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
@@ -332,6 +500,24 @@ const ServiceTable = () => {
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
+          
+          {/* View mode toggle */}
+          <ToggleGroup 
+            type="single" 
+            value={viewMode} 
+            onValueChange={(value) => {
+              if (value) setViewMode(value as "card" | "table");
+            }}
+            className="border rounded-md"
+          >
+            <ToggleGroupItem value="card" aria-label="Ver como tarjetas">
+              <LayoutGrid className="h-4 w-4" />
+            </ToggleGroupItem>
+            <ToggleGroupItem value="table" aria-label="Ver como tabla">
+              <LayoutList className="h-4 w-4" />
+            </ToggleGroupItem>
+          </ToggleGroup>
+          
           {!isPublicView && (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -344,49 +530,49 @@ const ServiceTable = () => {
                   Mostrar/Ocultar Columnas
                 </DropdownMenuItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.fecha}
                   onCheckedChange={() => handleColumnToggle("fecha")}
                 >
                   Fecha
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.cliente}
                   onCheckedChange={() => handleColumnToggle("cliente")}
                 >
                   Cliente
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.concepto}
                   onCheckedChange={() => handleColumnToggle("concepto")}
                 >
                   Concepto
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.descripcion}
                   onCheckedChange={() => handleColumnToggle("descripcion")}
                 >
                   Descripción
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.total}
                   onCheckedChange={() => handleColumnToggle("total")}
                 >
                   Total
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.estatus_factura}
                   onCheckedChange={() => handleColumnToggle("estatus_factura")}
                 >
                   Estatus Factura
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.pago_cliente}
                   onCheckedChange={() => handleColumnToggle("pago_cliente")}
                 >
                   Pago Cliente
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={false}
+                  checked={columnVisibility.archivo}
                   onCheckedChange={() => handleColumnToggle("archivo")}
                 >
                   Archivo
@@ -397,83 +583,10 @@ const ServiceTable = () => {
         </div>
       </CardHeader>
       <CardContent>
-        {currentClients.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {currentClients.map((client: any) => (
-              <Card 
-                key={client.cliente} 
-                className="overflow-hidden hover:shadow-md transition-shadow"
-              >
-                <CardContent className="p-5">
-                  <div className="flex items-center space-x-4 mb-4">
-                    <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-                      <User className="h-6 w-6 text-gray-500" />
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-lg">{client.cliente}</h3>
-                      <div className="flex items-center space-x-2 text-sm text-gray-500">
-                        <Building className="h-3 w-3" />
-                        <span>Empresa</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4 mb-4">
-                    <div className="bg-blue-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-500 mb-1">Total de servicios</div>
-                      <div className="font-semibold">{client.services.length}</div>
-                    </div>
-                    <div className="bg-orange-50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-500 mb-1">Pagos pendientes</div>
-                      <div className="font-semibold">
-                        {client.services.filter((s: any) => s.pago_cliente === "pendiente").length}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-between items-center pt-3 border-t border-gray-100">
-                    <div>
-                      <div className="text-xs text-gray-500 mb-1">Adeudo</div>
-                      <div className="font-bold text-lg">{formatCurrency(client.totalPending)}</div>
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleViewClientDetails(client.cliente)}
-                        className="flex items-center gap-1"
-                      >
-                        <Eye className="h-3 w-3" />
-                        <span>Detalles</span>
-                      </Button>
-                      <Button 
-                        variant={client.totalPending > 0 ? "default" : "outline"}
-                        size="sm"
-                        className={cn(
-                          "flex items-center gap-1",
-                          client.totalPending > 0 ? "bg-blue-600" : ""
-                        )}
-                      >
-                        <CreditCard className="h-3 w-3" />
-                        <span>{client.totalPending > 0 ? "Pagar" : "Pagado"}</span>
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <div className="bg-gray-50 rounded-lg p-8 text-center">
-            <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
-            <h3 className="text-lg font-medium">No se encontraron clientes</h3>
-            <p className="text-muted-foreground mt-1">
-              {searchTerm ? 'Prueba con otra búsqueda' : 'No hay clientes para mostrar'}
-            </p>
-          </div>
-        )}
+        {/* Render based on view mode */}
+        {viewMode === "card" ? renderCardView() : renderTableView()}
         
-        {filteredClients.length > servicesPerPage && (
+        {viewMode === "card" && filteredClients.length > servicesPerPage && (
           <div className="mt-4">
             <Pagination>
               <PaginationContent>
