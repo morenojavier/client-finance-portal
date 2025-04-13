@@ -1,20 +1,13 @@
 
 import React from "react";
 import { 
-  Table, 
-  TableBody, 
-  TableCell, 
-  TableHead, 
-  TableHeader, 
-  TableRow 
-} from "@/components/ui/table";
-import { 
   CheckCircle2, 
   Clock, 
   FileText, 
   AlertCircle 
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 
 interface Service {
@@ -142,51 +135,62 @@ const CustomServiceTable = ({ limit, clientId, filterStatus }: ServiceTableProps
     }
   };
 
+  const getCardBorder = (status: string) => {
+    switch (status) {
+      case "paid":
+        return "border-l-4 border-green-500";
+      case "pending":
+        return "border-l-4 border-orange-500";
+      case "overdue":
+        return "border-l-4 border-red-500";
+      default:
+        return "";
+    }
+  };
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Servicio</TableHead>
-            {!clientId && <TableHead>Cliente</TableHead>}
-            <TableHead>Fecha</TableHead>
-            <TableHead>Monto</TableHead>
-            <TableHead>Estado</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {services.length > 0 ? (
-            services.map((service) => (
-              <TableRow key={service.id}>
-                <TableCell>
-                  <div className="font-medium">{service.name}</div>
-                </TableCell>
-                {!clientId && (
-                  <TableCell>
-                    <div className="font-medium">{service.client}</div>
-                  </TableCell>
-                )}
-                <TableCell>{new Date(service.date).toLocaleDateString("es-MX")}</TableCell>
-                <TableCell>${service.amount.toLocaleString("es-MX")}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    {getStatusIcon(service.status)}
-                    {getStatusBadge(service.status)}
+    <div>
+      {services.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {services.map((service) => (
+            <Card 
+              key={service.id} 
+              className={cn("overflow-hidden hover:shadow-md transition-shadow", getCardBorder(service.status))}
+            >
+              <CardContent className="p-5">
+                <div className="flex flex-col gap-2">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-semibold text-lg">{service.name}</h3>
+                    <div className="flex items-center gap-2">
+                      {getStatusIcon(service.status)}
+                      {getStatusBadge(service.status)}
+                    </div>
                   </div>
-                </TableCell>
-              </TableRow>
-            ))
-          ) : (
-            <TableRow>
-              <TableCell colSpan={clientId ? 4 : 5} className="h-24 text-center">
-                {filterStatus && filterStatus.length > 0 
-                  ? "No hay servicios con pagos pendientes."
-                  : "No hay servicios registrados."}
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
+                  
+                  {!clientId && service.client && (
+                    <div className="text-sm text-gray-500">
+                      <span className="font-medium">Cliente:</span> {service.client}
+                    </div>
+                  )}
+                  
+                  <div className="flex justify-between items-center mt-2 pt-2 border-t border-gray-100">
+                    <div className="text-sm text-gray-500">
+                      <span className="font-medium">Fecha:</span> {new Date(service.date).toLocaleDateString("es-MX")}
+                    </div>
+                    <div className="font-bold text-lg">${service.amount.toLocaleString("es-MX")}</div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="bg-gray-50 rounded-lg p-8 text-center">
+          {filterStatus && filterStatus.length > 0 
+            ? "No hay servicios con pagos pendientes."
+            : "No hay servicios registrados."}
+        </div>
+      )}
     </div>
   );
 };
