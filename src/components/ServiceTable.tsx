@@ -1,13 +1,4 @@
-
 import React, { useState } from "react";
-import { 
-  Table, 
-  TableHeader, 
-  TableBody, 
-  TableHead, 
-  TableRow, 
-  TableCell 
-} from "@/components/ui/table";
 import { 
   DropdownMenu, 
   DropdownMenuContent, 
@@ -42,7 +33,12 @@ import {
   FileImage,
   PaperclipIcon,
   Info,
-  Eye
+  Eye,
+  User,
+  Mail,
+  Building,
+  CreditCard,
+  Clock
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
@@ -61,7 +57,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 interface Service {
   id: string;
@@ -179,34 +175,45 @@ const ServiceTable = () => {
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
   const [fileToUpload, setFileToUpload] = useState<File | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
-  const servicesPerPage = 5;
+  const servicesPerPage = 4; // Changed from 5 to 4 for better card layout
   const location = useLocation();
+  const navigate = useNavigate();
   const isPublicView = location.pathname.includes('/publico');
   
-  const [columnVisibility, setColumnVisibility] = useState<ColumnVisibility>({
-    fecha: true,
-    cliente: true,
-    concepto: true,
-    descripcion: true,
-    total: true,
-    estatus_factura: true,
-    pago_cliente: true,
-    archivo: true
-  });
-
+  // Group services by client
+  const servicesByClient = services.reduce((acc: Record<string, any>, service) => {
+    if (!acc[service.cliente]) {
+      acc[service.cliente] = {
+        cliente: service.cliente,
+        services: [],
+        totalPending: 0,
+        totalAmount: 0
+      };
+    }
+    
+    acc[service.cliente].services.push(service);
+    acc[service.cliente].totalAmount += service.total;
+    
+    if (service.pago_cliente === "pendiente") {
+      acc[service.cliente].totalPending += service.total;
+    }
+    
+    return acc;
+  }, {});
+  
+  const clientsList = Object.values(servicesByClient);
+  
   // Apply search filter
-  const filteredServices = services.filter(
-    (service) =>
-      service.concepto.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.descripcion.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.cliente.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredClients = clientsList.filter(
+    (client: any) =>
+      client.cliente.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Apply pagination
-  const indexOfLastService = currentPage * servicesPerPage;
-  const indexOfFirstService = indexOfLastService - servicesPerPage;
-  const currentServices = filteredServices.slice(indexOfFirstService, indexOfLastService);
-  const totalPages = Math.ceil(filteredServices.length / servicesPerPage);
+  const indexOfLastClient = currentPage * servicesPerPage;
+  const indexOfFirstClient = indexOfLastClient - servicesPerPage;
+  const currentClients = filteredClients.slice(indexOfFirstClient, indexOfLastClient);
+  const totalPages = Math.ceil(filteredClients.length / servicesPerPage);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("es-MX", {
@@ -297,16 +304,29 @@ const ServiceTable = () => {
   const paginate = (pageNumber: number) => {
     setCurrentPage(pageNumber);
   };
+  
+  const handleViewClientDetails = (cliente: string) => {
+    // In a real implementation, this would navigate to the client detail page
+    // Here we just show a notification for demonstration
+    toast({
+      title: "Ver detalles de cliente",
+      description: `Navegando a detalles del cliente: ${cliente}`
+    });
+    
+    // Find client ID in a real implementation and navigate
+    // For now, simulate navigation to a client page
+    // navigate(`/cliente/${clientId}`);
+  };
 
   return (
     <Card className="w-full">
       <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between space-y-2 sm:space-y-0">
-        <CardTitle>Servicios</CardTitle>
+        <CardTitle>Servicios por Cliente</CardTitle>
         <div className="flex flex-col sm:flex-row w-full sm:w-auto space-y-2 sm:space-y-0 sm:space-x-2">
           <div className="relative w-full sm:w-64">
             <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder="Buscar servicios..."
+              placeholder="Buscar clientes..."
               className="pl-8"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -324,49 +344,49 @@ const ServiceTable = () => {
                   Mostrar/Ocultar Columnas
                 </DropdownMenuItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.fecha}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("fecha")}
                 >
                   Fecha
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.cliente}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("cliente")}
                 >
                   Cliente
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.concepto}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("concepto")}
                 >
                   Concepto
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.descripcion}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("descripcion")}
                 >
                   Descripción
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.total}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("total")}
                 >
                   Total
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.estatus_factura}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("estatus_factura")}
                 >
                   Estatus Factura
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.pago_cliente}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("pago_cliente")}
                 >
                   Pago Cliente
                 </DropdownMenuCheckboxItem>
                 <DropdownMenuCheckboxItem
-                  checked={columnVisibility.archivo}
+                  checked={false}
                   onCheckedChange={() => handleColumnToggle("archivo")}
                 >
                   Archivo
@@ -377,215 +397,132 @@ const ServiceTable = () => {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="rounded-md border">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                {columnVisibility.fecha && <TableHead>Fecha</TableHead>}
-                {columnVisibility.cliente && <TableHead>Cliente</TableHead>}
-                {columnVisibility.concepto && <TableHead>Concepto</TableHead>}
-                {columnVisibility.descripcion && <TableHead className="hidden md:table-cell">Descripción</TableHead>}
-                {columnVisibility.total && <TableHead>Total</TableHead>}
-                {columnVisibility.estatus_factura && <TableHead className="hidden md:table-cell">Estatus Factura</TableHead>}
-                {columnVisibility.pago_cliente && <TableHead>Pago Cliente</TableHead>}
-                {columnVisibility.archivo && <TableHead>Archivo</TableHead>}
-                <TableHead className="text-right">Acciones</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {currentServices.length > 0 ? (
-                currentServices.map((service) => (
-                  <TableRow 
-                    key={service.id}
-                    className={getRowColorClass(service)}
-                  >
-                    {columnVisibility.fecha && <TableCell>{formatDate(service.fecha)}</TableCell>}
-                    {columnVisibility.cliente && <TableCell>{service.cliente}</TableCell>}
-                    {columnVisibility.concepto && <TableCell>{service.concepto}</TableCell>}
-                    {columnVisibility.descripcion && (
-                      <TableCell className="hidden md:table-cell">
-                        <TooltipProvider>
-                          <Tooltip>
-                            <TooltipTrigger asChild>
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                className="flex items-center gap-1 p-0 h-auto"
-                              >
-                                <Info className="h-3 w-3" />
-                                <span>Más información</span>
-                              </Button>
-                            </TooltipTrigger>
-                            <TooltipContent className="max-w-sm bg-white text-black">
-                              <p>{service.descripcion}</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        </TooltipProvider>
-                      </TableCell>
-                    )}
-                    {columnVisibility.total && <TableCell>{formatCurrency(service.total)}</TableCell>}
-                    {columnVisibility.estatus_factura && (
-                      <TableCell className="hidden md:table-cell">
-                        <Badge
-                          variant={service.estatus_factura === "generada" ? "default" : "outline"}
-                          className={cn(
-                            service.estatus_factura === "generada" 
-                              ? "bg-green-100 text-green-800 hover:bg-green-100" 
-                              : "bg-yellow-100 text-yellow-800 hover:bg-yellow-100"
-                          )}
-                        >
-                          {service.estatus_factura === "generada" ? "Generada" : "Pendiente"}
-                        </Badge>
-                      </TableCell>
-                    )}
-                    {columnVisibility.pago_cliente && (
-                      <TableCell>
-                        <Badge
-                          variant={service.pago_cliente === "pagada" ? "default" : "outline"}
-                          className={cn(
-                            service.pago_cliente === "pagada" 
-                              ? "bg-blue-100 text-blue-800 hover:bg-blue-100" 
-                              : "bg-orange-100 text-orange-800 hover:bg-orange-100"
-                          )}
-                        >
-                          {service.pago_cliente === "pagada" ? "Pagada" : "Pendiente"}
-                        </Badge>
-                      </TableCell>
-                    )}
-                    {columnVisibility.archivo && (
-                      <TableCell>
-                        {isPublicView ? (
-                          service.hasFile ? (
-                            <Button 
-                              variant="outline" 
-                              size="sm" 
-                              onClick={() => handleFileAction(service.id, true)}
-                              className="flex items-center gap-1"
-                            >
-                              <Eye className="h-3 w-3" />
-                              <span className="hidden sm:inline">Ver</span>
-                            </Button>
-                          ) : null
-                        ) : (
-                          <Button 
-                            variant="outline" 
-                            size="sm" 
-                            onClick={() => handleFileAction(service.id, !!service.hasFile)}
-                            className="flex items-center gap-1"
-                          >
-                            {service.hasFile ? (
-                              <>
-                                <Eye className="h-3 w-3" />
-                                <span className="hidden sm:inline">Ver</span>
-                              </>
-                            ) : (
-                              <>
-                                <PaperclipIcon className="h-3 w-3" />
-                                <span className="hidden sm:inline">Adjuntar</span>
-                              </>
-                            )}
-                          </Button>
+        {currentClients.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {currentClients.map((client: any) => (
+              <Card 
+                key={client.cliente} 
+                className="overflow-hidden hover:shadow-md transition-shadow"
+              >
+                <CardContent className="p-5">
+                  <div className="flex items-center space-x-4 mb-4">
+                    <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                      <User className="h-6 w-6 text-gray-500" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-lg">{client.cliente}</h3>
+                      <div className="flex items-center space-x-2 text-sm text-gray-500">
+                        <Building className="h-3 w-3" />
+                        <span>Empresa</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div className="bg-blue-50 p-3 rounded-lg">
+                      <div className="text-xs text-gray-500 mb-1">Total de servicios</div>
+                      <div className="font-semibold">{client.services.length}</div>
+                    </div>
+                    <div className="bg-orange-50 p-3 rounded-lg">
+                      <div className="text-xs text-gray-500 mb-1">Pagos pendientes</div>
+                      <div className="font-semibold">
+                        {client.services.filter((s: any) => s.pago_cliente === "pendiente").length}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center pt-3 border-t border-gray-100">
+                    <div>
+                      <div className="text-xs text-gray-500 mb-1">Adeudo</div>
+                      <div className="font-bold text-lg">{formatCurrency(client.totalPending)}</div>
+                    </div>
+                    <div className="flex space-x-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => handleViewClientDetails(client.cliente)}
+                        className="flex items-center gap-1"
+                      >
+                        <Eye className="h-3 w-3" />
+                        <span>Detalles</span>
+                      </Button>
+                      <Button 
+                        variant={client.totalPending > 0 ? "default" : "outline"}
+                        size="sm"
+                        className={cn(
+                          "flex items-center gap-1",
+                          client.totalPending > 0 ? "bg-blue-600" : ""
                         )}
-                      </TableCell>
-                    )}
-                    <TableCell className="text-right">
-                      {!isPublicView && (
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="h-8 w-8 p-0"
-                            >
-                              <MoreVertical className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {service.estatus_factura === "generada" && (
-                              <>
-                                <DropdownMenuItem className="flex items-center">
-                                  <Download className="mr-2 h-4 w-4" />
-                                  <span>Descargar PDF</span>
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="flex items-center">
-                                  <FileText className="mr-2 h-4 w-4" />
-                                  <span>Descargar XML</span>
-                                </DropdownMenuItem>
-                              </>
-                            )}
-                            {service.pago_cliente === "pendiente" && (
-                              <DropdownMenuItem className="flex items-center">
-                                <Upload className="mr-2 h-4 w-4" />
-                                <span>Subir Comprobante</span>
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      )}
-                    </TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={9} className="text-center py-6">
-                    No se encontraron servicios
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
+                      >
+                        <CreditCard className="h-3 w-3" />
+                        <span>{client.totalPending > 0 ? "Pagar" : "Pagado"}</span>
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="bg-gray-50 rounded-lg p-8 text-center">
+            <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-2" />
+            <h3 className="text-lg font-medium">No se encontraron clientes</h3>
+            <p className="text-muted-foreground mt-1">
+              {searchTerm ? 'Prueba con otra búsqueda' : 'No hay clientes para mostrar'}
+            </p>
+          </div>
+        )}
         
-        {/* Paginación */}
-        <div className="mt-4">
-          <Pagination>
-            <PaginationContent>
-              <PaginationItem>
-                <PaginationPrevious 
-                  onClick={() => paginate(Math.max(1, currentPage - 1))}
-                  className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-              
-              {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                const pageNumber = i + 1;
-                return (
-                  <PaginationItem key={i}>
-                    <PaginationLink 
-                      isActive={pageNumber === currentPage}
-                      onClick={() => paginate(pageNumber)}
-                    >
-                      {pageNumber}
-                    </PaginationLink>
-                  </PaginationItem>
-                );
-              })}
-              
-              {totalPages > 5 && (
-                <>
-                  <PaginationItem>
-                    <PaginationEllipsis />
-                  </PaginationItem>
-                  <PaginationItem>
-                    <PaginationLink onClick={() => paginate(totalPages)}>
-                      {totalPages}
-                    </PaginationLink>
-                  </PaginationItem>
-                </>
-              )}
-              
-              <PaginationItem>
-                <PaginationNext 
-                  onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
-                  className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                />
-              </PaginationItem>
-            </PaginationContent>
-          </Pagination>
-        </div>
+        {filteredClients.length > servicesPerPage && (
+          <div className="mt-4">
+            <Pagination>
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious 
+                    onClick={() => paginate(Math.max(1, currentPage - 1))}
+                    className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+                
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  const pageNumber = i + 1;
+                  return (
+                    <PaginationItem key={i}>
+                      <PaginationLink 
+                        isActive={pageNumber === currentPage}
+                        onClick={() => paginate(pageNumber)}
+                      >
+                        {pageNumber}
+                      </PaginationLink>
+                    </PaginationItem>
+                  );
+                })}
+                
+                {totalPages > 5 && (
+                  <>
+                    <PaginationItem>
+                      <PaginationEllipsis />
+                    </PaginationItem>
+                    <PaginationItem>
+                      <PaginationLink onClick={() => paginate(totalPages)}>
+                        {totalPages}
+                      </PaginationLink>
+                    </PaginationItem>
+                  </>
+                )}
+                
+                <PaginationItem>
+                  <PaginationNext 
+                    onClick={() => paginate(Math.min(totalPages, currentPage + 1))}
+                    className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        )}
       </CardContent>
 
-      {/* Modal de subida de archivos */}
       <Dialog open={isUploadOpen} onOpenChange={setIsUploadOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
@@ -626,7 +563,6 @@ const ServiceTable = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Modal para ver/reemplazar archivos */}
       <Dialog open={isViewFileOpen} onOpenChange={setIsViewFileOpen}>
         <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
