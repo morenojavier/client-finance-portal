@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import DashboardCard from "@/components/DashboardCard";
@@ -10,6 +11,38 @@ import {
   Users
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { 
+  Table, 
+  TableBody, 
+  TableCell, 
+  TableHead, 
+  TableHeader, 
+  TableRow 
+} from "@/components/ui/table";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import CustomServiceTable from "@/components/CustomServiceTable";
+
+// Mock clients data
+const topClients = [
+  {
+    id: "1",
+    name: "Carlos Rodríguez",
+    company: "Empresa A",
+    pendingBalance: 5000,
+  },
+  {
+    id: "2",
+    name: "María González",
+    company: "Negocio B",
+    pendingBalance: 7500,
+  },
+  {
+    id: "3",
+    name: "Juan López",
+    company: "Startup C",
+    pendingBalance: 3000,
+  },
+];
 
 const Dashboard = () => {
   const [totalBalance] = useState(21000);
@@ -37,13 +70,13 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 animate-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 animate-in">
         <DashboardCard
           title="Adeudo Total"
           value={`$${totalBalance.toLocaleString('es-MX')}`}
           description="Valor total de servicios"
           icon={DollarSign}
-          className="border-l-4 border-finance-primary sm:col-span-2 xl:col-span-2"
+          className="border-l-4 border-finance-primary"
         />
         <DashboardCard
           title="Total Clientes"
