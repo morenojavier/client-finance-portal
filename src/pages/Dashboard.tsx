@@ -70,48 +70,48 @@ const Dashboard = () => {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 animate-in">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 animate-in">
         <DashboardCard
           title="Adeudo Total"
           value={`$${totalBalance.toLocaleString('es-MX')}`}
           description="Valor total de servicios"
           icon={DollarSign}
-          className="border-l-4 border-finance-primary lg:col-span-1 xl:col-span-2"
+          className="border-l-4 border-finance-primary sm:col-span-2 xl:col-span-2"
         />
         <DashboardCard
           title="Total Clientes"
           value={totalClients}
           description="Clientes registrados"
           icon={Users}
-          className="border-l-4 border-blue-500 lg:col-span-1 xl:col-span-1"
+          className="border-l-4 border-blue-500"
         />
         <DashboardCard
           title="Clientes Activos"
           value={activeClients}
           description="Con pagos pendientes"
           icon={Users}
-          className="border-l-4 border-green-600 lg:col-span-1 xl:col-span-1"
+          className="border-l-4 border-green-600"
         />
         <DashboardCard
           title="Pagos Pendientes"
           value={pendingPayments}
           description="Servicios por cobrar"
           icon={AlertCircle}
-          className="border-l-4 border-orange-500 lg:col-span-1 xl:col-span-1"
+          className="border-l-4 border-orange-500"
         />
         <DashboardCard
           title="Servicios Activos"
           value={totalServices}
           description="Total de servicios"
           icon={Receipt}
-          className="border-l-4 border-finance-secondary lg:col-span-1"
+          className="border-l-4 border-finance-secondary"
         />
         <DashboardCard
           title="Servicios Pagados"
           value={completedServices}
           description="Facturados y pagados"
           icon={CheckCircle}
-          className="border-l-4 border-green-500 lg:col-span-1"
+          className="border-l-4 border-green-500"
         />
       </div>
 
